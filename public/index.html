@@ -291,12 +291,17 @@
               setTimeout(() => { pBox.style.display = 'none'; }, 2000);
 
               const d = res.data;
+              
+              // Gofile আপলোড রেসপন্স থেকে সরাসরি ফাইলের ডিরেক্ট URL নেওয়া
+              const directLink = d.directLink || d.link || (d.downloadPage ? `https://${sData.server}.gofile.io/download/web/${d.fileId}/${encodeURIComponent(d.fileName || file.name)}` : '');
+
               const files = getFiles();
               files.unshift({
                 fileId: d.fileId,
                 name: d.fileName || file.name,
                 bytes: file.size,
                 size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+                directUrl: directLink,
                 date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
               });
               saveFiles(files);
@@ -338,13 +343,17 @@
       document.getElementById('storageBarFill').style.width = percent + '%';
     }
 
-    // ব্যাকগ্রাউন্ডে সাইটের ভেতরেই ডাউনলোড ট্রিগার করার ফাংশন
-    function triggerDirectDownload(fileId, fileName) {
-      const downloadUrl = `/api/download?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`;
+    // ইন-সাইট ডিরেক্ট ডাউনলোডার
+    function triggerDirectDownload(directUrl, fileName) {
+      if (!directUrl) {
+        alert('ফাইল লিঙ্ক পাওয়া যায়নি।');
+        return;
+      }
+      const downloadProxy = `/api/download?url=${encodeURIComponent(directUrl)}&fileName=${encodeURIComponent(fileName)}`;
       
       const iframe = document.createElement('iframe');
       iframe.style.display = 'none';
-      iframe.src = downloadUrl;
+      iframe.src = downloadProxy;
       document.body.appendChild(iframe);
       setTimeout(() => {
         document.body.removeChild(iframe);
@@ -378,7 +387,7 @@
           </div>
           <div class="card-actions">
             <button class="btn-action" onclick="openPreview(${idx})"><i class="fa-solid fa-eye"></i> View</button>
-            <button class="btn-action" onclick="triggerDirectDownload('${f.fileId}', '${f.name}')" title="Download"><i class="fa-solid fa-download"></i></button>
+            <button class="btn-action" onclick="triggerDirectDownload('${f.directUrl}', '${f.name}')" title="Download"><i class="fa-solid fa-download"></i></button>
           </div>
         `;
         grid.appendChild(card);
@@ -390,26 +399,26 @@
       if (!file) return;
 
       document.getElementById('modalFileName').innerText = file.name;
-      document.getElementById('modalDownloadBtn').onclick = () => triggerDirectDownload(file.fileId, file.name);
+      document.getElementById('modalDownloadBtn').onclick = () => triggerDirectDownload(file.directUrl, file.name);
 
       const ext = file.name.split('.').pop().toLowerCase();
       const body = document.getElementById('modalPreviewBody');
       body.innerHTML = '<div style="color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> ফাইল লোড হচ্ছে...</div>';
       document.getElementById('previewModal').style.display = 'flex';
 
-      const downloadUrl = `/api/download?fileId=${file.fileId}&fileName=${encodeURIComponent(file.name)}`;
+      const fileUrl = file.directUrl;
 
       try {
         if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-          body.innerHTML = `<img src="${downloadUrl}" class="preview-media" alt="${file.name}" />`;
+          body.innerHTML = `<img src="${fileUrl}" class="preview-media" alt="${file.name}" />`;
         } else if (['mp4', 'webm'].includes(ext)) {
-          body.innerHTML = `<video controls autoplay class="preview-media" src="${downloadUrl}"></video>`;
+          body.innerHTML = `<video controls autoplay class="preview-media" src="${fileUrl}"></video>`;
         } else if (['mp3', 'wav'].includes(ext)) {
-          body.innerHTML = `<audio controls autoplay style="width: 100%;" src="${downloadUrl}"></audio>`;
+          body.innerHTML = `<audio controls autoplay style="width: 100%;" src="${fileUrl}"></audio>`;
         } else if (ext === 'pdf') {
-          body.innerHTML = `<iframe src="${downloadUrl}" style="width:100%; height:55vh; border:none; border-radius:8px;"></iframe>`;
+          body.innerHTML = `<iframe src="${fileUrl}" style="width:100%; height:55vh; border:none; border-radius:8px;"></iframe>`;
         } else if (['txt', 'js', 'json', 'html', 'css', 'py'].includes(ext)) {
-          const res = await fetch(downloadUrl);
+          const res = await fetch(fileUrl);
           const text = await res.text();
           body.innerHTML = `<pre class="text-preview-box">${escapeHtml(text)}</pre>`;
         } else {

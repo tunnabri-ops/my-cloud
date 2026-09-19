@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>মাই ক্লাউড ড্রাইভ</title>
+  <title>Cloud Drive</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -20,26 +20,26 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: var(--bg-main); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-    /* বাম পাশের সাইডবার (Google Drive স্টাইল) */
+    /* Left Sidebar */
     .sidebar { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
     .brand { display: flex; align-items: center; gap: 12px; font-size: 19px; font-weight: 700; color: #38bdf8; margin-bottom: 25px; }
     
-    /* আপলোড বাটন */
+    /* Upload Button */
     .upload-btn-container { position: relative; margin-bottom: 25px; }
     .upload-btn { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 25px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4); transition: 0.2s; }
     .upload-btn:hover { background: var(--accent-hover); }
     .upload-btn-container input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
 
-    /* সাইডবার মেনু */
+    /* Sidebar Navigation */
     .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: var(--text-muted); cursor: pointer; margin-bottom: 5px; font-size: 14px; }
     .menu-item.active, .menu-item:hover { background: var(--bg-hover); color: var(--text-main); }
     
-    /* স্টোরেজ স্ট্যাটাস */
+    /* Storage Meter */
     .storage-info { margin-top: auto; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 12px; color: var(--text-muted); }
     .storage-bar { height: 6px; background: #334155; border-radius: 4px; margin-top: 8px; overflow: hidden; }
-    .storage-fill { width: 15%; height: 100%; background: #38bdf8; }
+    .storage-fill { width: 0%; height: 100%; background: #38bdf8; transition: width 0.3s; }
 
-    /* মূল ফাইল ব্রাউজার */
+    /* Main Area */
     .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     .top-header { padding: 16px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .search-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 8px 16px; display: flex; align-items: center; gap: 10px; width: 320px; }
@@ -48,16 +48,15 @@
     .content-body { flex: 1; padding: 25px; overflow-y: auto; }
     .section-title { font-size: 15px; font-weight: 600; color: var(--text-muted); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* ফাইল গ্রিড */
+    /* File Grid */
     .file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; }
     .file-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; cursor: pointer; transition: 0.2s; position: relative; }
     .file-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
     .file-thumbnail { height: 110px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); border-radius: 6px; margin-bottom: 10px; font-size: 42px; color: #38bdf8; overflow: hidden; }
-    .file-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
     .file-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .file-meta { font-size: 11px; color: var(--text-muted); margin-top: 5px; display: flex; justify-content: space-between; }
 
-    /* গুগল ড্রাইভের মতো প্রিভিউ পপ-আপ মোডাল */
+    /* Preview Modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 100; }
     .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; width: 90%; max-width: 800px; height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
     .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
@@ -70,63 +69,62 @@
 </head>
 <body>
 
-  <!-- সাইডবার -->
+  <!-- Sidebar -->
   <div class="sidebar">
     <div class="brand">
-      <i class="fa-solid fa-cloud"></i> ক্লাউড ড্রাইভ
+      <i class="fa-solid fa-cloud"></i> Cloud Drive
     </div>
     
     <div class="upload-btn-container">
       <button class="upload-btn" id="uploadBtn">
-        <i class="fa-solid fa-plus"></i> ফাইল আপলোড
+        <i class="fa-solid fa-plus"></i> Upload File
       </button>
       <input type="file" id="fileInput" onchange="uploadFile()" />
     </div>
 
     <div class="menu-item active">
-      <i class="fa-solid fa-folder-open"></i> আমার ফাইলসমূহ
+      <i class="fa-solid fa-folder-open"></i> My Files
     </div>
     <div class="menu-item" onclick="clearMyFiles()">
-      <i class="fa-solid fa-trash"></i> হিস্টোরি ক্লিয়ার
+      <i class="fa-solid fa-trash"></i> Clear History
     </div>
 
+    <!-- Storage Quota Tracker (e.g. 60 GB Limit) -->
     <div class="storage-info">
-      <div>স্টোরেজ: ২.০০ TB ক্লাউড</div>
-      <div class="storage-bar"><div class="storage-fill"></div></div>
-      <div style="margin-top: 5px; font-size: 11px;">ড্রপবক্স ক্লাউড কানেক্টেড</div>
+      <div id="storageText">Storage: 0.00 GB of 60 GB used</div>
+      <div class="storage-bar"><div class="storage-fill" id="storageFill"></div></div>
+      <div style="margin-top: 5px; font-size: 11px;">Dropbox Cloud Storage</div>
     </div>
   </div>
 
-  <!-- মেইন কন্টেন্ট -->
+  <!-- Main Content -->
   <div class="main-area">
     <div class="top-header">
       <div class="search-box">
         <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted);"></i>
-        <input type="text" id="searchInput" placeholder="ফাইল খুঁজুন..." oninput="renderFiles()" />
+        <input type="text" id="searchInput" placeholder="Search files..." oninput="renderFiles()" />
       </div>
       <div id="uploadStatusText" style="font-size: 13px; color: #38bdf8;"></div>
     </div>
 
     <div class="content-body">
       <div class="section-title">
-        <span>সাম্প্রতিক আপলোড করা ফাইল</span>
-        <span id="fileCount" style="font-size: 12px;">০ টি ফাইল</span>
+        <span>Files in this Browser</span>
+        <span id="fileCount" style="font-size: 12px;">0 files</span>
       </div>
 
-      <div class="file-grid" id="filesGrid">
-        <!-- জাভাস্ক্রিপ্ট দিয়ে ফাইল কার্ড লোড হবে -->
-      </div>
+      <div class="file-grid" id="filesGrid"></div>
     </div>
   </div>
 
-  <!-- গুগল ড্রাইভ স্টাইল প্রিভিউ মোডাল -->
+  <!-- Preview Modal -->
   <div class="modal-overlay" id="previewModal">
     <div class="modal-box">
       <div class="modal-header">
         <div style="font-size: 14px; font-weight: 600; max-width: 450px; overflow: hidden; text-overflow: ellipsis;" id="modalFileName"></div>
         <div style="display: flex; gap: 10px; align-items: center;">
           <a href="#" id="modalDownload" class="btn-action" target="_blank" download>
-            <i class="fa-solid fa-download"></i> ডাউনলোড
+            <i class="fa-solid fa-download"></i> Download
           </a>
           <button class="btn-action" style="background:#475569;" onclick="closeModal()">
             <i class="fa-solid fa-xmark"></i>
@@ -138,7 +136,9 @@
   </div>
 
   <script>
-    // ইউজারের ব্রাউজার স্টোরেজ থেকে ফাইলের রেকর্ড নেওয়া
+    const MAX_STORAGE_GB = 60; // প্রতি ব্রাউজারে ৬০ জিবি লিমিট
+    const MAX_STORAGE_BYTES = MAX_STORAGE_GB * 1024 * 1024 * 1024;
+
     function getStoredFiles() {
       return JSON.parse(localStorage.getItem('my_drive_files') || '[]');
     }
@@ -147,15 +147,34 @@
       localStorage.setItem('my_drive_files', JSON.stringify(files));
     }
 
-    // ফাইল আপলোড ফাংশন
+    function updateStorageInfo() {
+      const files = getStoredFiles();
+      const usedBytes = files.reduce((acc, f) => acc + (f.sizeBytes || 0), 0);
+      const usedGB = (usedBytes / (1024 * 1024 * 1024)).toFixed(2);
+      const percent = Math.min(100, ((usedBytes / MAX_STORAGE_BYTES) * 100)).toFixed(1);
+
+      document.getElementById('storageText').innerText = `Storage: ${usedGB} GB of ${MAX_STORAGE_GB} GB used`;
+      document.getElementById('storageFill').style.width = `${percent}%`;
+
+      return { usedBytes, percent };
+    }
+
     async function uploadFile() {
       const input = document.getElementById('fileInput');
       const statusText = document.getElementById('uploadStatusText');
 
       if (!input.files[0]) return;
-
       const file = input.files[0];
-      statusText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> আপলোড হচ্ছে...';
+
+      // স্টোরেজ লিমিট চেক
+      const { usedBytes } = updateStorageInfo();
+      if (usedBytes + file.size > MAX_STORAGE_BYTES) {
+        alert(`Storage limit exceeded! You have reached your ${MAX_STORAGE_GB} GB quota on this browser.`);
+        input.value = '';
+        return;
+      }
+
+      statusText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
 
       const formData = new FormData();
       formData.append('userFile', file);
@@ -165,54 +184,53 @@
         const data = await res.json();
 
         if (res.ok) {
-          statusText.innerHTML = '<span style="color:#22c55e;"><i class="fa-solid fa-check"></i> সম্পন্ন!</span>';
+          statusText.innerHTML = '<span style="color:#22c55e;"><i class="fa-solid fa-check"></i> Upload Completed!</span>';
           setTimeout(() => { statusText.innerText = ''; }, 3000);
 
-          // ফাইলটি ইউজারের লোকাল লিস্টে যোগ করা
           const files = getStoredFiles();
           const urlParams = new URLSearchParams(data.link.split('?')[1]);
           files.unshift({
             id: urlParams.get('file'),
             name: data.name,
             size: data.size,
-            date: new Date().toLocaleDateString('bn-BD')
+            sizeBytes: file.size,
+            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
           });
           saveStoredFiles(files);
           renderFiles();
+          updateStorageInfo();
         } else {
-          statusText.innerHTML = '<span style="color:#ef4444;">আপলোড ব্যর্থ!</span>';
+          statusText.innerHTML = '<span style="color:#ef4444;">Upload Failed!</span>';
         }
       } catch (err) {
-        statusText.innerHTML = '<span style="color:#ef4444;">সার্ভার এরর!</span>';
+        statusText.innerHTML = '<span style="color:#ef4444;">Server Error!</span>';
       } finally {
         input.value = '';
       }
     }
 
-    // ফাইল আইকন নির্ধারণ
     function getIcon(name) {
       const ext = name.split('.').pop().toLowerCase();
       if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'fa-file-image';
       if (['mp4', 'webm', 'mkv'].includes(ext)) return 'fa-file-video';
       if (['mp3', 'wav'].includes(ext)) return 'fa-file-audio';
       if (ext === 'pdf') return 'fa-file-pdf';
-      if (['txt', 'log', 'html', 'js'].includes(ext)) return 'fa-file-lines';
+      if (['txt', 'log', 'html', 'js', 'json'].includes(ext)) return 'fa-file-lines';
       if (['zip', 'rar', '7z'].includes(ext)) return 'fa-file-zipper';
       return 'fa-file';
     }
 
-    // ফাইলগুলো স্ক্রিনে রেন্ডার করা
     function renderFiles() {
       const query = document.getElementById('searchInput').value.toLowerCase();
       const files = getStoredFiles().filter(f => f.name.toLowerCase().includes(query));
       const grid = document.getElementById('filesGrid');
       const count = document.getElementById('fileCount');
 
-      count.innerText = `${files.length} টি ফাইল`;
+      count.innerText = `${files.length} file${files.length === 1 ? '' : 's'}`;
       grid.innerHTML = '';
 
       if (!files.length) {
-        grid.innerHTML = '<p style="color:var(--text-muted); grid-column: 1/-1;">কোনো ফাইল নেই। বাম পাশের "+ ফাইল আপলোড" বাটনে ক্লিক করে ফাইল রাখুন।</p>';
+        grid.innerHTML = '<p style="color:var(--text-muted); grid-column: 1/-1;">No files found in this browser. Click "+ Upload File" to add files.</p>';
         return;
       }
 
@@ -234,7 +252,6 @@
       });
     }
 
-    // প্রিভিউ মোডাল ওপেন
     async function openPreview(file) {
       const modal = document.getElementById('previewModal');
       const modalName = document.getElementById('modalFileName');
@@ -266,10 +283,10 @@
         } else if (ext === 'pdf') {
           modalContent.innerHTML = `<iframe src="${fileUrl}"></iframe>`;
         } else {
-          modalContent.innerHTML = `<div style="text-align:center; color:var(--text-muted);"><i class="fa-solid fa-file-arrow-down" style="font-size:45px; margin-bottom:10px;"></i><br>প্রিভিউ দেখার সুবিধা নেই। উপরের ডাউনলোড বাটনে ক্লিক করুন।</div>`;
+          modalContent.innerHTML = `<div style="text-align:center; color:var(--text-muted);"><i class="fa-solid fa-file-arrow-down" style="font-size:45px; margin-bottom:10px;"></i><br>Preview not available for this file type. Click Download above.</div>`;
         }
       } catch (err) {
-        modalContent.innerHTML = '<p style="color:#ef4444;">ফাইল প্রিভিউ লোড করা যায়নি!</p>';
+        modalContent.innerHTML = '<p style="color:#ef4444;">Failed to load file preview!</p>';
       }
     }
 
@@ -279,14 +296,16 @@
     }
 
     function clearMyFiles() {
-      if (confirm('আপনার ব্রাউজার থেকে ফাইল লিস্ট মুছে ফেলতে চান? (ড্রপবক্সের ফাইল সুরক্ষিত থাকবে)')) {
+      if (confirm('Clear local history for this browser? (Files in Dropbox will remain intact)')) {
         localStorage.removeItem('my_drive_files');
         renderFiles();
+        updateStorageInfo();
       }
     }
 
-    // পেজ লোড হলে আগের ফাইলগুলো দেখানো
+    // Initialize UI
     renderFiles();
+    updateStorageInfo();
   </script>
 </body>
 </html>

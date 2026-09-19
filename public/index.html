@@ -23,42 +23,56 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: var(--bg-main); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-    .sidebar { width: 270px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
+    /* Desktop Sidebar */
+    .sidebar { width: 280px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; flex-shrink: 0; }
     .brand { display: flex; align-items: center; gap: 12px; font-size: 19px; font-weight: 700; color: #38bdf8; margin-bottom: 25px; }
     
-    .upload-btn-container { position: relative; margin-bottom: 25px; }
-    .upload-btn { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 25px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4); transition: 0.2s; }
+    .upload-btn-container { position: relative; margin-bottom: 20px; }
+    .upload-btn { background: var(--accent); color: white; border: none; padding: 12px 18px; border-radius: 25px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4); }
     .upload-btn:hover { background: var(--accent-hover); }
     .upload-btn-container input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
 
-    .menu-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; color: var(--text-muted); cursor: pointer; margin-bottom: 5px; font-size: 13px; }
+    .menu-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; color: var(--text-muted); cursor: pointer; margin-bottom: 6px; font-size: 13px; }
     .menu-item.active, .menu-item:hover { background: var(--bg-hover); color: var(--text-main); }
     
-    /* Lifetime Storage Reminder Card */
     .notice-card { background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: 8px; padding: 12px; margin-top: auto; font-size: 11px; line-height: 1.5; color: #e2e8f0; }
-    .notice-card .notice-title { font-weight: 700; color: var(--warning-text); display: flex; align-items: center; gap: 6px; margin-bottom: 5px; font-size: 12px; }
+    .notice-card .notice-title { font-weight: 700; color: var(--warning-text); display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 12px; }
 
+    /* Main Content Area */
     .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .top-header { padding: 16px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .search-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 8px 16px; display: flex; align-items: center; gap: 10px; width: 320px; }
+    .top-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .search-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 8px 16px; display: flex; align-items: center; gap: 10px; width: 300px; max-width: 100%; }
     .search-box input { background: transparent; border: none; color: white; outline: none; width: 100%; font-size: 13px; }
 
-    .content-body { flex: 1; padding: 25px; overflow-y: auto; }
-    .section-title { font-size: 15px; font-weight: 600; color: var(--text-muted); margin-bottom: 15px; display: flex; justify-content: space-between; }
+    .content-body { flex: 1; padding: 20px; overflow-y: auto; }
+    .section-title { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
 
-    .file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
-    .file-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; cursor: pointer; transition: 0.2s; position: relative; }
+    /* Responsive Grid */
+    .file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+    .file-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; cursor: pointer; transition: 0.2s; position: relative; }
     .file-card:hover { transform: translateY(-3px); border-color: var(--accent); }
-    .file-thumbnail { height: 100px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.25); border-radius: 6px; margin-bottom: 12px; font-size: 40px; color: #38bdf8; }
+    .file-thumbnail { height: 90px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.25); border-radius: 6px; margin-bottom: 10px; font-size: 36px; color: #38bdf8; }
     .file-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .file-meta { font-size: 11px; color: var(--text-muted); margin-top: 6px; display: flex; justify-content: space-between; align-items: center; }
     .active-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
 
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 100; }
-    .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; width: 90%; max-width: 650px; padding: 25px; display: flex; flex-direction: column; text-align: center; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 100; padding: 15px; }
+    .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 550px; padding: 20px; display: flex; flex-direction: column; text-align: center; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     .btn-action { background: var(--accent); color: white; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; justify-content: center; }
-    .btn-action:hover { background: var(--accent-hover); }
+
+    /* Mobile Responsive Media Queries */
+    @media (max-width: 768px) {
+      body { flex-direction: column; height: 100vh; overflow-y: auto; }
+      .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); padding: 15px; flex-shrink: 0; }
+      .brand { margin-bottom: 15px; }
+      .notice-card { margin-top: 15px; }
+      .search-box { width: 100%; }
+      .top-header { flex-direction: column; align-items: stretch; }
+      .file-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+      .file-thumbnail { height: 75px; font-size: 30px; }
+    }
   </style>
 </head>
 <body>
@@ -78,12 +92,11 @@
     <div class="menu-item active"><i class="fa-solid fa-folder-open"></i> My Cloud Files</div>
     <div class="menu-item" onclick="clearLocalHistory()"><i class="fa-solid fa-trash"></i> Clear History</div>
 
-    <!-- Instruction for Users -->
     <div class="notice-card">
       <div class="notice-title">
         <i class="fa-solid fa-shield-halved"></i> লাইফটাইম রাখার নিয়ম
       </div>
-      ফাইল আজীবন অক্ষত রাখতে <strong>প্রতি ৩০ দিনে অন্তত একবার</strong> ফাইলের লিংকে ক্লিক করে ফাইলটি ওপেন বা ভিউ করুন। নিয়মিত অ্যাক্টিভিটি থাকলে ক্লাউড থেকে ফাইল কখনোই রিমুভ হবে না।
+      ফাইল আজীবন রাখতে <strong>প্রতি ৩০ দিনে অন্তত একবার</strong> লিংকে ক্লিক করে ফাইলটি ওপেন করুন।
     </div>
   </div>
 
@@ -98,7 +111,7 @@
 
     <div class="content-body">
       <div class="section-title">
-        <span>Unlimited Cloud Storage</span>
+        <span>Files in this Browser</span>
         <span id="fileCount" style="font-size: 12px;">0 files</span>
       </div>
       <div class="file-grid" id="filesGrid"></div>
@@ -109,14 +122,14 @@
   <div class="modal-overlay" id="previewModal" onclick="if(event.target.id==='previewModal') closeModal()">
     <div class="modal-box">
       <div class="modal-header">
-        <div id="modalFileName" style="font-size: 15px; font-weight: 600; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 500px;"></div>
+        <div id="modalFileName" style="font-size: 14px; font-weight: 600; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;"></div>
         <button onclick="closeModal()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px;"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <div style="margin: 25px 0;">
-        <i class="fa-solid fa-cloud-arrow-down" style="font-size: 55px; color: #38bdf8; margin-bottom: 15px;"></i>
+      <div style="margin: 20px 0;">
+        <i class="fa-solid fa-cloud-arrow-down" style="font-size: 50px; color: #38bdf8; margin-bottom: 15px;"></i>
         <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">
-          ফাইলটি ডাউনলোড বা ভিউ করতে নিচের বাটনে ক্লিক করুন।
+          ফাইলটি ডাউনলোড বা ভিউ করতে নিচের বাটনে চাপ দিন।
         </p>
         <a href="#" id="modalDownload" class="btn-action" target="_blank" rel="noopener noreferrer">
           <i class="fa-solid fa-arrow-up-right-from-square"></i> Open / Download File
@@ -141,7 +154,7 @@
       if (!input.files[0]) return;
       const file = input.files[0];
 
-      status.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Uploading to Unlimited Cloud...`;
+      status.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Uploading ${(file.size / (1024 * 1024)).toFixed(1)} MB...`;
 
       try {
         const sRes = await fetch('/api/server');

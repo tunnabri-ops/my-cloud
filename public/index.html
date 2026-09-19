@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ক্লাউড ড্রাইভ</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0b0f19; margin: 0; color: #fff; padding: 20px; box-sizing: border-box; }
+    .card { background: #111827; border: 1px solid #1f2937; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 100%; max-width: 400px; text-align: center; }
+    h2 { margin-bottom: 8px; font-size: 22px; color: #38bdf8; }
+    p { color: #9ca3af; font-size: 13px; margin-top: 0; }
+    input[type="file"] { margin: 20px 0; width: 100%; color: #9ca3af; }
+    button { background: #2563eb; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 15px; width: 100%; font-weight: 600; }
+    button:hover { background: #1d4ed8; }
+    #status { margin-top: 20px; font-size: 14px; text-align: left; word-break: break-all; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>📦 ক্লাউড স্টোরেজ</h2>
+    <p>ফাইল আপলোড করুন, সরাসরি আপনার ড্রাইভে সেভ হবে।</p>
+    <input type="file" id="fileInput" />
+    <button id="uploadBtn" onclick="upload()">আপলোড করুন</button>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    async function upload() {
+      const input = document.getElementById('fileInput');
+      const status = document.getElementById('status');
+      const btn = document.getElementById('uploadBtn');
+
+      if (!input.files[0]) {
+        status.innerHTML = '<span style="color: #ef4444;">দয়া করে একটি ফাইল সিলেক্ট করুন!</span>';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = 'আপলোড হচ্ছে...';
+      status.innerHTML = '<span style="color: #38bdf8;">ফাইল প্রসেস হচ্ছে...</span>';
+
+      const formData = new FormData();
+      formData.append('userFile', input.files[0]);
+
+      try {
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (res.ok) {
+          status.innerHTML = '<span style="color: #22c55e;"><b>' + data.message + '</b></span><br>' +
+                             'ফাইল: ' + data.name + '<br>' +
+                             'সাইজ: ' + data.size + '<br>' +
+                             '<a href="' + data.link + '" target="_blank" style="color:#38bdf8; text-decoration: underline;">ভিউ লিঙ্ক</a>';
+        } else {
+          status.innerHTML = '<span style="color: #ef4444;">' + data.error + '</span>';
+        }
+      } catch (err) {
+        status.innerHTML = '<span style="color: #ef4444;">সার্ভারে কানেক্ট করা যায়নি!</span>';
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'আপলোড করুন';
+      }
+    }
+  </script>
+
+</body>
+</html>

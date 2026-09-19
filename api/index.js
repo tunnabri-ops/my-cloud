@@ -5,10 +5,8 @@ const { Dropbox } = require('dropbox');
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Vercel Environment Variables থেকে টোকেন নেবে
 const dbx = new Dropbox({ accessToken: process.env.DROPBOX_TOKEN });
 
-// ফাইল আপলোড API
 app.post('/api/upload', upload.single('userFile'), async (req, res) => {
   try {
     if (!req.file) {
@@ -23,14 +21,15 @@ app.post('/api/upload', upload.single('userFile'), async (req, res) => {
       contents: req.file.buffer,
     });
 
-    let shareUrl = '';
+    let shareUrl = 'https://www.dropbox.com/home';
     try {
       const linkRes = await dbx.sharingCreateSharedLinkWithSettings({
         path: response.result.path_lower,
       });
       shareUrl = linkRes.result.url;
     } catch (e) {
-      shareUrl = 'ড্রপবক্স ড্যাশবোর্ড থেকে ফাইলটি দেখতে পারেন।';
+      // লিঙ্ক তৈরিতে সমস্যা হলে মূল ড্রপবক্স হোমে রিডাইরেক্ট করবে
+      shareUrl = 'https://www.dropbox.com/home';
     }
 
     res.json({

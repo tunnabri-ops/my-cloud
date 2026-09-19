@@ -58,7 +58,7 @@
     .storage-bar-bg { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.08); border-radius: 10px; overflow: hidden; }
     .storage-bar-fill { width: 0.1%; height: 100%; background: linear-gradient(90deg, #38bdf8, #a855f7); border-radius: 10px; transition: width 0.3s; }
 
-    /* Upload Zone */
+    /* Upload Area */
     .upload-zone {
       background: var(--card-bg); backdrop-filter: blur(16px); border-radius: 20px;
       border: 2px dashed var(--card-border); padding: 35px 25px; text-align: center;
@@ -106,7 +106,7 @@
     }
     .btn-action:hover { background: #0369a1; }
 
-    /* Modal */
+    /* Modal for Preview */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(10px);
       display: none; align-items: center; justify-content: center; z-index: 100; padding: 15px;
@@ -184,7 +184,7 @@
     </div>
 
     <div class="notice-bar">
-      <span><i class="fa-solid fa-shield-halved"></i> <strong>লাইফটাইম রাখার নিয়ম:</strong> ফাইল আজীবন রাখতে প্রতি ৩০ দিনে অন্তত একবার সাইট থেকে ফাইলটি ওপেন বা ডাউনলোড করুন।</span>
+      <span><i class="fa-solid fa-shield-halved"></i> <strong>লাইফটাইম রাখার নিয়ম:</strong> ফাইল আজীবন অক্ষত রাখতে প্রতি ৩০ দিনে অন্তত একবার সাইট থেকে ফাইলটি ওপেন বা ডাউনলোড করুন।</span>
       <button onclick="clearHistory()"><i class="fa-solid fa-trash"></i> হিস্ট্রি মুছুন</button>
     </div>
 
@@ -291,21 +291,36 @@
           }
         };
 
-        xhr.onload = () => {
+        xhr.onload = async () => {
           if (xhr.status === 200) {
             const res = JSON.parse(xhr.responseText);
             if (res.status === 'ok') {
+              pText.innerHTML = '<span style="color:#4ade80;">Processing file...</span>';
+
+              const d = res.data;
+              let directDownloadLink = '';
+
+              // Fetch the direct downloadable stream link
+              try {
+                const infoRes = await fetch(`/api/file-info?fileId=${d.fileId}`);
+                const infoData = await infoRes.json();
+                if (infoData.directLink) {
+                  directDownloadLink = infoData.directLink;
+                }
+              } catch (e) {
+                console.warn('Could not fetch direct link immediately', e);
+              }
+
               pText.innerHTML = '<span style="color:#4ade80;">Upload Complete!</span>';
               setTimeout(() => { pBox.style.display = 'none'; }, 2000);
 
-              const d = res.data;
               const files = getFiles();
               files.unshift({
                 fileId: d.fileId,
                 name: d.fileName || file.name,
                 bytes: file.size,
                 size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-                downloadPage: d.downloadPage,
+                directLink: directDownloadLink,
                 date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
               });
               saveFiles(files);
@@ -374,22 +389,48 @@
           </div>
           <div class="card-actions">
             <button class="btn-action" onclick="openPreview(${idx})"><i class="fa-solid fa-eye"></i> View</button>
-            <button class="btn-action" onclick="triggerDownload('${f.fileId}', '${f.downloadPage}')" title="Download"><i class="fa-solid fa-download"></i></button>
+            <button class="btn-action" onclick="downloadInSite('${f.fileId}', '${f.name}')" title="Download"><i class="fa-solid fa-download"></i></button>
           </div>
         `;
         grid.appendChild(card);
       });
     }
 
-    // Direct Browser Download (Doesn't get blocked by Vercel payload limits)
-    function triggerDownload(fileId, downloadPage) {
-      const targetUrl = downloadPage || `https://gofile.io/d/${fileId}`;
-      const win = window.open(targetUrl, '_blank');
-      if (win) {
-        win.focus();
+    // Direct in-site file downloader (Zero redirects to provider)
+    async function downloadInSite(fileId, fileName) {
+      let directUrl = '';
+      const files = getFiles();
+      const current = files.find(f => f.fileId === fileId);
+
+      if (current && current.directLink) {
+        directUrl = current.directLink;
       } else {
-        location.href = targetUrl;
+        try {
+          const res = await fetch(`/api/file-info?fileId=${fileId}`);
+          const data = await res.json();
+          if (data.directLink) {
+            directUrl = data.directLink;
+            if (current) {
+              current.directLink = directUrl;
+              saveFiles(files);
+            }
+          }
+        } catch (e) {}
       }
+
+      if (!directUrl) {
+        alert('ফাইল ডাউনলোড লিংক সংগ্রহ করা যায়নি। আবার চেষ্টা করুন।');
+        return;
+      }
+
+      // Trigger seamless download without opening tabs
+      const link = document.createElement('a');
+      link.href = directUrl;
+      link.setAttribute('download', fileName);
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     async function openPreview(index) {
@@ -397,36 +438,71 @@
       if (!file) return;
 
       document.getElementById('modalFileName').innerText = file.name;
-      document.getElementById('modalDownloadBtn').onclick = () => triggerDownload(file.fileId, file.downloadPage);
+      document.getElementById('modalDownloadBtn').onclick = () => downloadInSite(file.fileId, file.name);
 
       const ext = file.name.split('.').pop().toLowerCase();
       const body = document.getElementById('modalPreviewBody');
-      body.innerHTML = '';
+      body.innerHTML = '<div style="color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> ফাইল লোড হচ্ছে...</div>';
+      document.getElementById('previewModal').style.display = 'flex';
 
-      if (['txt', 'js', 'json', 'html', 'css', 'py', 'md'].includes(ext)) {
-        body.innerHTML = `
-          <div style="text-align: center; padding: 25px;">
-            <i class="fa-solid fa-file-code" style="font-size: 55px; color: var(--accent); margin-bottom: 12px;"></i>
-            <h4 style="margin-bottom: 8px;">${file.name}</h4>
-            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Size: ${file.size}</p>
-            <p style="color: #4ade80; font-size: 12px;"><i class="fa-solid fa-check"></i> File ready for download.</p>
-          </div>
-        `;
-      } else {
-        body.innerHTML = `
-          <div style="text-align: center; padding: 25px;">
-            <i class="fa-solid ${getFileIcon(file.name)}" style="font-size: 55px; color: var(--accent); margin-bottom: 12px;"></i>
-            <h4 style="margin-bottom: 8px;">${file.name}</h4>
-            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Size: ${file.size}</p>
-            <p style="color: #4ade80; font-size: 12px;"><i class="fa-solid fa-check"></i> File ready for download.</p>
-          </div>
-        `;
+      let directUrl = file.directLink;
+      if (!directUrl) {
+        try {
+          const res = await fetch(`/api/file-info?fileId=${file.fileId}`);
+          const data = await res.json();
+          if (data.directLink) {
+            directUrl = data.directLink;
+            file.directLink = directUrl;
+            const allFiles = getFiles();
+            allFiles[index] = file;
+            saveFiles(allFiles);
+          }
+        } catch (e) {}
       }
 
-      document.getElementById('previewModal').style.display = 'flex';
+      if (!directUrl) {
+        fallbackPreview(file.name);
+        return;
+      }
+
+      try {
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+          body.innerHTML = `<img src="${directUrl}" class="preview-media" alt="${file.name}" />`;
+        } else if (['mp4', 'webm'].includes(ext)) {
+          body.innerHTML = `<video controls autoplay class="preview-media" src="${directUrl}"></video>`;
+        } else if (['mp3', 'wav'].includes(ext)) {
+          body.innerHTML = `<audio controls autoplay style="width: 100%;" src="${directUrl}"></audio>`;
+        } else if (ext === 'pdf') {
+          body.innerHTML = `<iframe src="${directUrl}" style="width:100%; height:55vh; border:none; border-radius:8px;"></iframe>`;
+        } else if (['txt', 'js', 'json', 'html', 'css', 'py'].includes(ext)) {
+          const res = await fetch(directUrl);
+          const text = await res.text();
+          body.innerHTML = `<pre class="text-preview-box">${escapeHtml(text)}</pre>`;
+        } else {
+          fallbackPreview(file.name);
+        }
+      } catch (e) {
+        fallbackPreview(file.name);
+      }
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function fallbackPreview(fileName) {
+      const body = document.getElementById('modalPreviewBody');
+      body.innerHTML = `
+        <div style="text-align: center; padding: 25px;">
+          <i class="fa-solid ${getFileIcon(fileName)}" style="font-size: 55px; color: var(--accent); margin-bottom: 12px;"></i>
+          <p style="color: var(--text-muted); font-size: 13px;">ফাইলটির ইন-সাইট প্রিভিউ সরাসরি দেখার মতো নয়। নিচের বাটনে চাপ দিয়ে ডাউনলোড করে নিন।</p>
+        </div>
+      `;
     }
 
     function closeModal() {
+      const body = document.getElementById('modalPreviewBody');
+      body.innerHTML = '';
       document.getElementById('previewModal').style.display = 'none';
     }
 

@@ -7,7 +7,7 @@
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: #0f172a; margin: 0; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-    .card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); width: 100%; max-width: 520px; text-align: center; }
+    .card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); width: 100%; max-width: 580px; text-align: center; }
     h2 { margin-top: 0; color: #38bdf8; font-size: 22px; }
     input[type="file"] { margin: 20px 0; width: 100%; color: #94a3b8; }
     button, .btn { background: #0284c7; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: 600; text-decoration: none; display: inline-block; }
@@ -15,30 +15,31 @@
     #status { margin-top: 20px; font-size: 14px; text-align: left; }
     
     /* প্রিভিউ উইন্ডো */
-    .preview-box { margin-top: 20px; background: #0b0f19; border: 1px solid #334155; border-radius: 8px; padding: 15px; min-height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .preview-box { margin-top: 20px; background: #0b0f19; border: 1px solid #334155; border-radius: 8px; padding: 15px; min-height: 250px; max-height: 420px; display: flex; align-items: center; justify-content: center; overflow: auto; text-align: left; }
     .preview-box img, .preview-box video { max-width: 100%; max-height: 380px; border-radius: 6px; }
     .preview-box iframe { width: 100%; height: 380px; border: none; background: white; border-radius: 6px; }
+    .text-preview { white-space: pre-wrap; font-family: monospace; font-size: 13px; color: #cbd5e1; width: 100%; height: 100%; }
   </style>
 </head>
 <body>
 
-  <!-- ১. আপলোড ভিউ (মূল পেজে কেউ ফাইল লিস্ট দেখতে পাবে না) -->
+  <!-- আপলোড বক্স -->
   <div class="card" id="uploadCard">
     <h2>📦 ক্লাউড স্টোরেজ</h2>
-    <p style="color:#94a3b8; font-size: 13px;">ফাইল আপলোড করুন এবং নিরাপদ শেয়ার লিংক তৈরি করুন।</p>
+    <p style="color:#94a3b8; font-size: 13px;">ফাইল আপলোড করুন এবং প্রিভিউ লিংক তৈরি করুন।</p>
     <input type="file" id="fileInput" />
     <button id="uploadBtn" onclick="upload()">আপলোড করুন</button>
     <div id="status"></div>
   </div>
 
-  <!-- ২. গুগল ড্রাইভ প্রিভিউ ভিউ (শুধুমাত্র ফাইলের লিংকে ঢুকলে দেখাবে) -->
+  <!-- গুগল ড্রাইভ প্রিভিউ উইন্ডো -->
   <div class="card" id="previewCard" style="display: none;">
     <h3 id="prevFileName" style="color: #38bdf8; margin-bottom: 15px; word-break: break-all; font-size: 16px;"></h3>
     <div class="preview-box" id="mediaArea">
       <p style="color:#888;">প্রিভিউ লোড হচ্ছে...</p>
     </div>
     <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
-      <a id="downloadBtn" class="btn" href="#" target="_blank" download>⬇ ডাউনলোড</a>
+      <a id="downloadBtn" class="btn" href="#" target="_blank">⬇ ডাউনলোড</a>
       <a href="/" class="btn" style="background: #475569;">নতুন আপলোড</a>
     </div>
   </div>
@@ -48,7 +49,6 @@
     const fileId = urlParams.get('file');
     const fileName = urlParams.get('name') || 'File';
 
-    // লিংকে file parameter থাকলে শুধু প্রিভিউ দেখাবে
     if (fileId) {
       document.getElementById('uploadCard').style.display = 'none';
       document.getElementById('previewCard').style.display = 'block';
@@ -56,7 +56,7 @@
 
       fetch(`/api/file-url?id=${fileId}`)
         .then(res => res.json())
-        .then(data => {
+        .then(async data => {
           if (!data.url) throw new Error('Not found');
           const fileSrc = data.url;
           const mediaArea = document.getElementById('mediaArea');
@@ -64,20 +64,39 @@
 
           const ext = fileName.split('.').pop().toLowerCase();
 
+          // ছবি
           if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
             mediaArea.innerHTML = `<img src="${fileSrc}" alt="Preview" />`;
-          } else if (['mp4', 'webm'].includes(ext)) {
+          } 
+          // ভিডিও
+          else if (['mp4', 'webm'].includes(ext)) {
             mediaArea.innerHTML = `<video src="${fileSrc}" controls></video>`;
-          } else if (['mp3', 'wav', 'ogg'].includes(ext)) {
+          } 
+          // অডিও
+          else if (['mp3', 'wav', 'ogg'].includes(ext)) {
             mediaArea.innerHTML = `<audio src="${fileSrc}" controls style="width:100%;"></audio>`;
-          } else if (['pdf', 'txt', 'html'].includes(ext)) {
+          } 
+          // টেক্সট ফাইল (অটো ডাউনলোড হবে না, সরাসরি পেজে লেখা পড়বে)
+          else if (['txt', 'log', 'json', 'js', 'html', 'css'].includes(ext)) {
+            try {
+              const textRes = await fetch(fileSrc);
+              const textData = await textRes.text();
+              mediaArea.innerHTML = `<div class="text-preview">${textData.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`;
+            } catch (e) {
+              mediaArea.innerHTML = `<div style="padding: 20px; color: #94a3b8;">টেক্সট ফাইলটি লোড করা সম্ভব হয়নি। ডাউনলোড বাটনে ক্লিক করুন।</div>`;
+            }
+          } 
+          // PDF
+          else if (ext === 'pdf') {
             mediaArea.innerHTML = `<iframe src="${fileSrc}"></iframe>`;
-          } else {
-            mediaArea.innerHTML = `<div style="padding: 20px; color: #94a3b8;">📄 প্রিভিউ উপলভ্য নয়। নিচের বাটনে ক্লিক করে ডাউনলোড করুন।</div>`;
+          } 
+          // জিপ বা অন্যান্য ফাইল
+          else {
+            mediaArea.innerHTML = `<div style="padding: 20px; color: #94a3b8;">📦 ${ext.toUpperCase()} ফাইলের প্রিভিউ সরাসরি দেখা যায় না। ফাইলটি পেতে ডাউনলোড বাটনে ক্লিক করুন।</div>`;
           }
         })
         .catch(() => {
-          document.getElementById('mediaArea').innerHTML = `<p style="color:#ef4444;">ফাইলটি পাওয়া যায়নি বা এক্সপায়ার হয়ে গেছে।</p>`;
+          document.getElementById('mediaArea').innerHTML = `<p style="color:#ef4444;">ফাইল পাওয়া যায়নি বা লিংক এক্সপায়ার হয়েছে।</p>`;
         });
     }
 

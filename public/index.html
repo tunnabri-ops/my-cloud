@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cloud Drive</title>
+  <title>Cloud Drive - Unlimited Storage</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -16,6 +16,9 @@
       --accent-hover: #0369a1;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
+      --warning-bg: rgba(234, 179, 8, 0.1);
+      --warning-border: rgba(234, 179, 8, 0.3);
+      --warning-text: #facc15;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: var(--bg-main); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
@@ -23,18 +26,18 @@
     .sidebar { width: 270px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
     .brand { display: flex; align-items: center; gap: 12px; font-size: 19px; font-weight: 700; color: #38bdf8; margin-bottom: 25px; }
     
-    .storage-selector { margin-bottom: 12px; }
-    .storage-selector label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 6px; }
-    .storage-selector select { width: 100%; background: var(--bg-card); color: white; border: 1px solid var(--border); padding: 8px 10px; border-radius: 8px; outline: none; font-size: 13px; }
-
     .upload-btn-container { position: relative; margin-bottom: 25px; }
-    .upload-btn { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 25px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4); }
+    .upload-btn { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 25px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4); transition: 0.2s; }
     .upload-btn:hover { background: var(--accent-hover); }
     .upload-btn-container input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
 
     .menu-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; color: var(--text-muted); cursor: pointer; margin-bottom: 5px; font-size: 13px; }
     .menu-item.active, .menu-item:hover { background: var(--bg-hover); color: var(--text-main); }
     
+    /* Lifetime Storage Reminder Card */
+    .notice-card { background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: 8px; padding: 12px; margin-top: auto; font-size: 11px; line-height: 1.5; color: #e2e8f0; }
+    .notice-card .notice-title { font-weight: 700; color: var(--warning-text); display: flex; align-items: center; gap: 6px; margin-bottom: 5px; font-size: 12px; }
+
     .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     .top-header { padding: 16px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .search-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 8px 16px; display: flex; align-items: center; gap: 10px; width: 320px; }
@@ -43,21 +46,19 @@
     .content-body { flex: 1; padding: 25px; overflow-y: auto; }
     .section-title { font-size: 15px; font-weight: 600; color: var(--text-muted); margin-bottom: 15px; display: flex; justify-content: space-between; }
 
-    .file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 18px; }
+    .file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
     .file-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; cursor: pointer; transition: 0.2s; position: relative; }
     .file-card:hover { transform: translateY(-3px); border-color: var(--accent); }
     .file-thumbnail { height: 100px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.25); border-radius: 6px; margin-bottom: 12px; font-size: 40px; color: #38bdf8; }
     .file-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .file-meta { font-size: 11px; color: var(--text-muted); margin-top: 6px; display: flex; justify-content: space-between; }
-    .provider-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
-    .badge-gofile { background: #0369a1; color: #e0f2fe; }
-    .badge-dropbox { background: #1e3a8a; color: #93c5fd; }
+    .file-meta { font-size: 11px; color: var(--text-muted); margin-top: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .active-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
 
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 100; }
-    .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; width: 90%; max-width: 800px; height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
-    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #0f172a; }
-    .modal-body { flex: 1; padding: 20px; display: flex; align-items: center; justify-content: center; overflow: auto; background: #070d1e; }
-    .btn-action { background: var(--accent); color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer; }
+    .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; width: 90%; max-width: 650px; padding: 25px; display: flex; flex-direction: column; text-align: center; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .btn-action { background: var(--accent); color: white; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; justify-content: center; }
+    .btn-action:hover { background: var(--accent-hover); }
   </style>
 </head>
 <body>
@@ -66,24 +67,24 @@
     <div class="brand">
       <i class="fa-solid fa-cloud"></i> Cloud Drive
     </div>
-
-    <div class="storage-selector">
-      <label>Upload Target</label>
-      <select id="targetProvider">
-        <option value="gofile">Gofile (Unlimited)</option>
-        <option value="dropbox">Dropbox</option>
-      </select>
-    </div>
     
     <div class="upload-btn-container">
       <button class="upload-btn">
         <i class="fa-solid fa-plus"></i> Upload File
       </button>
-      <input type="file" id="fileInput" onchange="handleUpload()" />
+      <input type="file" id="fileInput" onchange="uploadFile()" />
     </div>
 
-    <div class="menu-item active"><i class="fa-solid fa-folder-open"></i> All Files</div>
+    <div class="menu-item active"><i class="fa-solid fa-folder-open"></i> My Cloud Files</div>
     <div class="menu-item" onclick="clearLocalHistory()"><i class="fa-solid fa-trash"></i> Clear History</div>
+
+    <!-- Instruction for Users -->
+    <div class="notice-card">
+      <div class="notice-title">
+        <i class="fa-solid fa-shield-halved"></i> লাইফটাইম রাখার নিয়ম
+      </div>
+      ফাইল আজীবন অক্ষত রাখতে <strong>প্রতি ৩০ দিনে অন্তত একবার</strong> ফাইলের লিংকে ক্লিক করে ফাইলটি ওপেন বা ভিউ করুন। নিয়মিত অ্যাক্টিভিটি থাকলে ক্লাউড থেকে ফাইল কখনোই রিমুভ হবে না।
+    </div>
   </div>
 
   <div class="main-area">
@@ -97,23 +98,30 @@
 
     <div class="content-body">
       <div class="section-title">
-        <span>Stored Files</span>
+        <span>Unlimited Cloud Storage</span>
         <span id="fileCount" style="font-size: 12px;">0 files</span>
       </div>
       <div class="file-grid" id="filesGrid"></div>
     </div>
   </div>
 
+  <!-- Modal -->
   <div class="modal-overlay" id="previewModal" onclick="if(event.target.id==='previewModal') closeModal()">
-    <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-box">
       <div class="modal-header">
-        <div id="modalFileName" style="font-size: 14px; font-weight: 600; max-width: 450px; overflow: hidden; text-overflow: ellipsis;"></div>
-        <div style="display: flex; gap: 10px;">
-          <a href="#" id="modalDownload" class="btn-action" target="_blank"><i class="fa-solid fa-download"></i> Open / Download</a>
-          <button class="btn-action" style="background:#475569;" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
-        </div>
+        <div id="modalFileName" style="font-size: 15px; font-weight: 600; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 500px;"></div>
+        <button onclick="closeModal()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px;"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="modal-body" id="modalContent"></div>
+
+      <div style="margin: 25px 0;">
+        <i class="fa-solid fa-cloud-arrow-down" style="font-size: 55px; color: #38bdf8; margin-bottom: 15px;"></i>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">
+          ফাইলটি ডাউনলোড বা ভিউ করতে নিচের বাটনে ক্লিক করুন।
+        </p>
+        <a href="#" id="modalDownload" class="btn-action" target="_blank" rel="noopener noreferrer">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Open / Download File
+        </a>
+      </div>
     </div>
   </div>
 
@@ -126,84 +134,54 @@
       localStorage.setItem('my_drive_files', JSON.stringify(files));
     }
 
-    async function handleUpload() {
+    async function uploadFile() {
       const input = document.getElementById('fileInput');
       const status = document.getElementById('uploadStatus');
-      const provider = document.getElementById('targetProvider').value;
 
       if (!input.files[0]) return;
       const file = input.files[0];
 
-      status.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Uploading to ${provider.toUpperCase()}...`;
+      status.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Uploading to Unlimited Cloud...`;
 
       try {
-        if (provider === 'gofile') {
-          const sRes = await fetch('/api/gofile-server');
-          const sData = await sRes.json();
-          if (!sData.server) throw new Error('No Gofile server');
+        const sRes = await fetch('/api/server');
+        const sData = await sRes.json();
+        if (!sData.server) throw new Error('No server available');
 
-          const form = new FormData();
-          form.append('file', file);
-          if (sData.token) form.append('token', sData.token);
+        const formData = new FormData();
+        formData.append('file', file);
+        if (sData.token) formData.append('token', sData.token);
 
-          const upRes = await fetch(`https://${sData.server}.gofile.io/contents/uploadfile`, {
-            method: 'POST',
-            body: form
+        const upRes = await fetch(`https://${sData.server}.gofile.io/contents/uploadfile`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const upData = await upRes.json();
+
+        if (upData.status === 'ok') {
+          const resData = upData.data;
+          const files = getStoredFiles();
+          files.unshift({
+            id: resData.fileId,
+            name: resData.fileName || file.name,
+            size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+            link: resData.downloadPage,
+            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
           });
-          const upData = await upRes.json();
+          saveStoredFiles(files);
+          renderFiles();
 
-          if (upData.status === 'ok') {
-            addFileRecord({
-              name: upData.data.fileName || file.name,
-              size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-              link: upData.data.downloadPage,
-              provider: 'Gofile'
-            });
-            showSuccess();
-          } else {
-            throw new Error('Upload rejected');
-          }
+          status.innerHTML = '<span style="color:#22c55e;"><i class="fa-solid fa-check"></i> Upload Completed!</span>';
+          setTimeout(() => { status.innerText = ''; }, 3000);
         } else {
-          // Dropbox upload
-          const form = new FormData();
-          form.append('userFile', file);
-
-          const res = await fetch('/api/upload-dropbox', { method: 'POST', body: form });
-          const data = await res.json();
-
-          if (res.ok) {
-            addFileRecord({
-              name: data.name,
-              size: data.size,
-              link: data.link,
-              provider: 'Dropbox'
-            });
-            showSuccess();
-          } else {
-            throw new Error(data.error || 'Dropbox error');
-          }
+          throw new Error('Upload rejected');
         }
       } catch (err) {
         status.innerHTML = `<span style="color:#ef4444;"><i class="fa-solid fa-circle-exclamation"></i> Upload Failed!</span>`;
       } finally {
         input.value = '';
       }
-    }
-
-    function addFileRecord(file) {
-      const files = getStoredFiles();
-      files.unshift({
-        ...file,
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      });
-      saveStoredFiles(files);
-      renderFiles();
-    }
-
-    function showSuccess() {
-      const status = document.getElementById('uploadStatus');
-      status.innerHTML = '<span style="color:#22c55e;"><i class="fa-solid fa-check"></i> Upload Completed!</span>';
-      setTimeout(() => { status.innerText = ''; }, 3000);
     }
 
     function renderFiles() {
@@ -214,7 +192,7 @@
       grid.innerHTML = '';
 
       if (!files.length) {
-        grid.innerHTML = '<p style="color:var(--text-muted); grid-column: 1/-1;">No files found.</p>';
+        grid.innerHTML = '<p style="color:var(--text-muted); grid-column: 1/-1;">No files found. Click "+ Upload File" to add files.</p>';
         return;
       }
 
@@ -222,13 +200,12 @@
         const card = document.createElement('div');
         card.className = 'file-card';
         card.onclick = () => openPreview(file);
-        const badgeClass = file.provider === 'Dropbox' ? 'badge-dropbox' : 'badge-gofile';
         card.innerHTML = `
           <div class="file-thumbnail"><i class="fa-solid fa-file"></i></div>
           <div class="file-title" title="${file.name}">${file.name}</div>
           <div class="file-meta">
             <span>${file.size}</span>
-            <span class="provider-badge ${badgeClass}">${file.provider || 'Gofile'}</span>
+            <span class="active-badge">Active</span>
           </div>
         `;
         grid.appendChild(card);
@@ -239,23 +216,14 @@
       document.getElementById('modalFileName').innerText = file.name;
       document.getElementById('modalDownload').href = file.link;
       document.getElementById('previewModal').style.display = 'flex';
-      document.getElementById('modalContent').innerHTML = `
-        <div style="text-align:center; color:var(--text-muted);">
-          <i class="fa-solid fa-cloud-arrow-down" style="font-size:45px; margin-bottom:12px; color:#38bdf8;"></i>
-          <br>Stored on <strong>${file.provider || 'Cloud'}</strong>.
-          <br><br>
-          <a href="${file.link}" target="_blank" class="btn-action">Open File</a>
-        </div>
-      `;
     }
 
     function closeModal() {
       document.getElementById('previewModal').style.display = 'none';
-      document.getElementById('modalContent').innerHTML = '';
     }
 
     function clearLocalHistory() {
-      if (confirm('Clear local history?')) {
+      if (confirm('Clear local files history?')) {
         localStorage.removeItem('my_drive_files');
         renderFiles();
       }

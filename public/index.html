@@ -5,109 +5,169 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ক্লাউড ড্রাইভ</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; margin: 0; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
-    .card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 500px; text-align: center; }
-    h2 { margin-top: 0; color: #38bdf8; }
-    input[type="file"] { margin: 20px 0; width: 100%; color: #94a3b8; }
-    button, .btn { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: 600; text-decoration: none; display: inline-block; }
-    button:hover, .btn:hover { background: #1d4ed8; }
-    #status { margin-top: 20px; font-size: 14px; text-align: left; word-break: break-all; }
-    
-    /* Google Drive Style Preview Box */
-    .preview-container { margin-top: 20px; background: #0b0f19; padding: 15px; border-radius: 8px; border: 1px solid #334155; }
-    .preview-media { max-width: 100%; max-height: 350px; border-radius: 6px; margin-bottom: 15px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #121212; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* টপ বার */
+    header { background: #1e1e1e; border-bottom: 1px solid #2d2d2d; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 18px; font-weight: bold; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+    .upload-btn-wrapper { position: relative; overflow: hidden; display: inline-block; }
+    .btn-upload { background: #0061fe; color: white; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
+    .upload-btn-wrapper input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+
+    /* মেইন এরিয়া */
+    .main-container { display: flex; flex: 1; height: calc(100vh - 55px); }
+
+    /* বাম পাশের গ্রিড */
+    .files-panel { flex: 1; padding: 20px; overflow-y: auto; }
+    .files-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
+    .file-card { background: #1e1e1e; border: 1px solid #2d2d2d; border-radius: 8px; padding: 15px; cursor: pointer; transition: 0.2s; text-align: center; }
+    .file-card:hover, .file-card.active { border-color: #0061fe; background: #252525; }
+    .file-icon { font-size: 40px; margin-bottom: 10px; }
+    .file-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-size { font-size: 11px; color: #888; margin-top: 4px; }
+
+    /* ডান পাশের প্রিভিউ প্যানেল */
+    .preview-panel { width: 450px; background: #1a1a1a; border-left: 1px solid #2d2d2d; display: flex; flex-direction: column; }
+    .preview-header { padding: 15px 20px; border-bottom: 1px solid #2d2d2d; display: flex; justify-content: space-between; align-items: center; }
+    .preview-body { flex: 1; padding: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .preview-body img, .preview-body video { max-width: 100%; max-height: 100%; border-radius: 6px; }
+    .preview-body iframe { width: 100%; height: 100%; border: none; background: white; border-radius: 6px; }
+    .btn-download { background: #0061fe; color: white; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: bold; }
   </style>
 </head>
 <body>
 
-  <!-- ফাইল আপলোড বক্স -->
-  <div class="card" id="uploadCard">
-    <h2>📦 ক্লাউড স্টোরেজ</h2>
-    <p style="color:#94a3b8; font-size: 13px;">ফাইল আপলোড করুন, গুগল ড্রাইভের মতো প্রিভিউ তৈরি হবে।</p>
-    <input type="file" id="fileInput" />
-    <button id="uploadBtn" onclick="upload()">আপলোড করুন</button>
-    <div id="status"></div>
-  </div>
+  <header>
+    <div class="logo">📦 2TB ক্লাউড ড্রাইভ</div>
+    <div class="upload-btn-wrapper">
+      <button class="btn-upload" id="uploadStatus">⬆ Upload File</button>
+      <input type="file" id="fileInput" onchange="handleUpload()" />
+    </div>
+  </header>
 
-  <!-- গুগল ড্রাইভের মতো প্রিভিউ পেজ -->
-  <div class="card" id="previewCard" style="display: none;">
-    <h3 id="prevFileName" style="color: #38bdf8; margin: 0 0 15px 0;"></h3>
-    <div class="preview-container" id="mediaArea"></div>
-    <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
-      <a id="downloadBtn" class="btn" href="#" download>ডাউনলোড করুন</a>
-      <a href="/" class="btn" style="background: #475569;">নতুন ফাইল আপলোড</a>
+  <div class="main-container">
+    <!-- বাম পাশের ফাইল লিস্ট -->
+    <div class="files-panel">
+      <h3 style="font-size: 16px; color: #aaa;">All Files</h3>
+      <div class="files-grid" id="fileGrid">
+        <p style="color: #666;">ফাইল লোড হচ্ছে...</p>
+      </div>
+    </div>
+
+    <!-- ডান পাশের প্রিভিউ প্যানেল -->
+    <div class="preview-panel" id="previewPanel">
+      <div class="preview-header">
+        <div>
+          <h4 id="prevName" style="font-size: 14px; max-width: 250px; overflow: hidden; text-overflow: ellipsis;">কোনো ফাইল সিলেক্ট করা হয়নি</h4>
+          <span id="prevSize" style="font-size: 11px; color: #888;"></span>
+        </div>
+        <a href="#" id="downloadLink" class="btn-download" target="_blank" style="display: none;">⬇ Download</a>
+      </div>
+      <div class="preview-body" id="previewContent">
+        <p style="color: #555;">প্রিভিউ দেখতে যেকোনো ফাইলে ক্লিক করুন</p>
+      </div>
     </div>
   </div>
 
   <script>
-    // URL চেক করা হচ্ছে ইউজার প্রিভিউ লিঙ্কে এসেছে কি না
-    const urlParams = new URLSearchParams(window.location.search);
-    const fileId = urlParams.get('file');
-    const fileName = urlParams.get('name');
+    let filesList = [];
 
-    if (fileId) {
-      document.getElementById('uploadCard').style.display = 'none';
-      document.getElementById('previewCard').style.display = 'block';
-      document.getElementById('prevFileName').innerText = fileName || 'ফাইল ভিউয়ার';
+    // ১. ফাইলগুলো লোড করা
+    async function loadFiles() {
+      try {
+        const res = await fetch('/api/files');
+        filesList = await res.json();
+        const grid = document.getElementById('fileGrid');
+        grid.innerHTML = '';
 
-      const fileSrc = `/api/view?id=${fileId}`;
-      const mediaArea = document.getElementById('mediaArea');
-      const downloadBtn = document.getElementById('downloadBtn');
-      downloadBtn.href = fileSrc;
+        if (!filesList.length) {
+          grid.innerHTML = '<p style="color: #666;">কোনো ফাইল নেই। উপরে Upload বাটনে ক্লিক করে ফাইল যোগ করুন।</p>';
+          return;
+        }
 
-      const ext = (fileName || '').split('.').pop().toLowerCase();
+        filesList.forEach((file, index) => {
+          const card = document.createElement('div');
+          card.className = 'file-card';
+          card.onclick = () => selectFile(index, card);
+          card.innerHTML = `
+            <div class="file-icon">📄</div>
+            <div class="file-name" title="${file.name}">${file.name}</div>
+            <div class="file-size">${file.size}</div>
+          `;
+          grid.appendChild(card);
+        });
 
-      if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-        mediaArea.innerHTML = `<img src="${fileSrc}" class="preview-media" alt="Preview" />`;
-      } else if (['mp4', 'webm'].includes(ext)) {
-        mediaArea.innerHTML = `<video src="${fileSrc}" controls class="preview-media" style="width:100%;"></video>`;
-      } else if (['mp3', 'wav', 'ogg'].includes(ext)) {
-        mediaArea.innerHTML = `<audio src="${fileSrc}" controls style="width:100%;"></audio>`;
-      } else if (ext === 'pdf') {
-        mediaArea.innerHTML = `<iframe src="${fileSrc}" style="width:100%; height:350px; border:none;"></iframe>`;
-      } else {
-        mediaArea.innerHTML = `<div style="padding: 30px 10px; color: #94a3b8;">📄 প্রিভিউ উপলভ্য নয়। ফাইলটি দেখতে নিচের বাটনে ক্লিক করে ডাউনলোড করুন।</div>`;
+        // অটোমেটিক প্রথম ফাইলটি প্রিভিউ সিলেক্ট করা
+        if (filesList.length > 0) {
+          selectFile(0, grid.children[0]);
+        }
+      } catch (err) {
+        document.getElementById('fileGrid').innerHTML = '<p style="color:red;">ফাইল লোড করা যায়নি।</p>';
       }
     }
 
-    async function upload() {
-      const input = document.getElementById('fileInput');
-      const status = document.getElementById('status');
-      const btn = document.getElementById('uploadBtn');
+    // ২. ফাইলে ক্লিক করলে ডানপাশে প্রিভিউ দেখানো
+    function selectFile(index, cardElem) {
+      document.querySelectorAll('.file-card').forEach(c => c.classList.remove('active'));
+      cardElem.classList.add('active');
 
-      if (!input.files[0]) {
-        status.innerHTML = '<span style="color: #ef4444;">দয়া করে একটি ফাইল সিলেক্ট করুন!</span>';
-        return;
+      const file = filesList[index];
+      const prevName = document.getElementById('prevName');
+      const prevSize = document.getElementById('prevSize');
+      const prevContent = document.getElementById('previewContent');
+      const downloadLink = document.getElementById('downloadLink');
+
+      prevName.innerText = file.name;
+      prevSize.innerText = file.size;
+
+      const fileUrl = `/api/view?id=${file.id}`;
+      downloadLink.href = fileUrl;
+      downloadLink.style.display = 'inline-block';
+
+      const ext = file.name.split('.').pop().toLowerCase();
+
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+        prevContent.innerHTML = `<img src="${fileUrl}" />`;
+      } else if (['mp4', 'webm'].includes(ext)) {
+        prevContent.innerHTML = `<video src="${fileUrl}" controls autoplay></video>`;
+      } else if (['mp3', 'wav', 'ogg'].includes(ext)) {
+        prevContent.innerHTML = `<audio src="${fileUrl}" controls autoplay></audio>`;
+      } else if (['pdf', 'html', 'txt'].includes(ext)) {
+        prevContent.innerHTML = `<iframe src="${fileUrl}"></iframe>`;
+      } else {
+        prevContent.innerHTML = `<p style="color:#888;">📄 প্রিভিউ অনুপলব্ধ। ডাউনলোড করে ফাইলটি দেখুন।</p>`;
       }
+    }
 
-      btn.disabled = true;
-      btn.innerText = 'আপলোড হচ্ছে...';
-      status.innerHTML = '<span style="color: #38bdf8;">ফাইল সেভ হচ্ছে...</span>';
+    // ৩. নতুন ফাইল আপলোড হ্যান্ডলার
+    async function handleUpload() {
+      const input = document.getElementById('fileInput');
+      const statusBtn = document.getElementById('uploadStatus');
 
+      if (!input.files[0]) return;
+
+      statusBtn.innerText = 'Uploading...';
       const formData = new FormData();
       formData.append('userFile', input.files[0]);
 
       try {
         const res = await fetch('/api/upload', { method: 'POST', body: formData });
-        const data = await res.json();
-
         if (res.ok) {
-          status.innerHTML = `
-            <span style="color: #22c55e;"><b>আপলোড সফল হয়েছে!</b></span><br>
-            ফাইল: ${data.name} (${data.size})<br><br>
-            👉 <a href="${data.link}" style="color:#38bdf8; text-decoration: underline; font-weight: bold;">ভিউ পেজ ওপেন করুন</a>
-          `;
+          statusBtn.innerText = 'Done!';
+          setTimeout(() => { statusBtn.innerText = '⬆ Upload File'; }, 2000);
+          loadFiles();
         } else {
-          status.innerHTML = `<span style="color: #ef4444;">${data.error}</span>`;
+          alert('আপলোড ব্যর্থ হয়েছে!');
+          statusBtn.innerText = '⬆ Upload File';
         }
-      } catch (err) {
-        status.innerHTML = '<span style="color: #ef4444;">সার্ভারে কানেক্ট করা যায়নি!</span>';
-      } finally {
-        btn.disabled = false;
-        btn.innerText = 'আপলোড করুন';
+      } catch (e) {
+        alert('সার্ভার এরর!');
+        statusBtn.innerText = '⬆ Upload File';
       }
     }
-  </script>
 
+    loadFiles();
+  </script>
 </body>
 </html>

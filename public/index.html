@@ -100,7 +100,7 @@
     .card-actions { display: flex; gap: 8px; margin-top: 12px; }
     .btn-action {
       flex: 1; padding: 8px; border-radius: 8px; border: none; background: #0284c7; color: #fff;
-      font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; text-decoration: none;
+      font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
     }
     .btn-action:hover { background: #0369a1; }
 
@@ -202,9 +202,9 @@
       <div class="modal-body" id="modalPreviewBody"></div>
 
       <div class="modal-footer">
-        <a href="#" class="btn-action" id="modalDownloadBtn">
+        <button class="btn-action" id="modalDownloadBtn">
           <i class="fa-solid fa-download"></i> Download File
-        </a>
+        </button>
       </div>
     </div>
   </div>
@@ -338,6 +338,19 @@
       document.getElementById('storageBarFill').style.width = percent + '%';
     }
 
+    // ব্যাকগ্রাউন্ডে সাইটের ভেতরেই ডাউনলোড ট্রিগার করার ফাংশন
+    function triggerDirectDownload(fileId, fileName) {
+      const downloadUrl = `/api/download?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`;
+      
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = downloadUrl;
+      document.body.appendChild(iframe);
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 20000);
+    }
+
     function renderFiles() {
       const q = document.getElementById('searchInput').value.toLowerCase();
       const allFiles = getFiles();
@@ -354,7 +367,6 @@
       }
 
       files.forEach((f, idx) => {
-        const downloadUrl = `/api/download?fileId=${f.fileId}&fileName=${encodeURIComponent(f.name)}`;
         const card = document.createElement('div');
         card.className = 'file-card';
         card.innerHTML = `
@@ -366,7 +378,7 @@
           </div>
           <div class="card-actions">
             <button class="btn-action" onclick="openPreview(${idx})"><i class="fa-solid fa-eye"></i> View</button>
-            <a href="${downloadUrl}" class="btn-action" title="Download"><i class="fa-solid fa-download"></i></a>
+            <button class="btn-action" onclick="triggerDirectDownload('${f.fileId}', '${f.name}')" title="Download"><i class="fa-solid fa-download"></i></button>
           </div>
         `;
         grid.appendChild(card);
@@ -378,13 +390,14 @@
       if (!file) return;
 
       document.getElementById('modalFileName').innerText = file.name;
-      const downloadUrl = `/api/download?fileId=${file.fileId}&fileName=${encodeURIComponent(file.name)}`;
-      document.getElementById('modalDownloadBtn').href = downloadUrl;
+      document.getElementById('modalDownloadBtn').onclick = () => triggerDirectDownload(file.fileId, file.name);
 
       const ext = file.name.split('.').pop().toLowerCase();
       const body = document.getElementById('modalPreviewBody');
       body.innerHTML = '<div style="color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> ফাইল লোড হচ্ছে...</div>';
       document.getElementById('previewModal').style.display = 'flex';
+
+      const downloadUrl = `/api/download?fileId=${file.fileId}&fileName=${encodeURIComponent(file.name)}`;
 
       try {
         if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {

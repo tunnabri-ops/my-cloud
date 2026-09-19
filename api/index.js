@@ -1,56 +1,72 @@
 const express = require('express');
 const multer = require('multer');
-const { Dropbox } = require('dropbox');
+const axios = require('axios');
+const FormData = require('form-data');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
-const dbx = new Dropbox({ accessToken: process.env.DROPBOX_TOKEN });
+const GOFILE_TOKEN = process.env.GOFILE_TOKEN;
 
-// ১. ফাইল আপলোড হ্যান্ডলার
+// Gofile-এ ফাইল আপলোড API
 app.post('/api/upload', upload.single('userFile'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'কোনো ফাইল সিলেক্ট করা হয়নি।' });
+      return res.status(400).json({ error: 'No file selected.' });
     }
 
-    const safeName = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const dbxPath = `/${Date.now()}_${safeName}`;
+    // ১. আপলোডের জন্য সেরা সার্ভারটি নির্বাচন করা
+    const serverRes = await axios.get('https://api.gofile.io/servers');
+    const bestServer = serverRes.data?.data?.servers?.[0]?.name || 'store1';
 
-    await dbx.filesUpload({
-      path: dbxPath,
-      contents: req.file.buffer,
+    // ২. Gofile সার্ভারে ফাইল পাঠানোর জন্য FormData তৈরি
+    const form = new FormData();
+    form.append('file', req.file.buffer, { filename: req.file.originalname });
+
+    const headers = {
+      ...form.getHeaders()
+    };
+    if (GOFILE_TOKEN) {
+      headers['Authorization'] = `Bearer ${GOFILE_TOKEN}`;
+    }
+
+    const uploadRes = await axios.post(`https://${bestServer}.gofile.io/contents/uploadfile`, form, {
+      headers: headers,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity
     });
 
-    // ফাইলের নিজস্ব ইউনিক আইডি তৈরি
-    const fileId = Buffer.from(dbxPath).toString('base64');
-    const previewUrl = `/?file=${fileId}&name=${encodeURIComponent(req.file.originalname)}`;
+    if (uploadRes.data.status !== 'ok') {
+      throw new Error('Gofile upload rejected');
+    }
+
+    const fileData = uploadRes.data.data;
+    const downloadPage = fileData.downloadPage;
+    const directLink = fileData.directLink || downloadPage;
 
     res.json({
-      message: 'আপলোড সফল হয়েছে!',
-      name: req.file.originalname,
+      message: 'Upload successful!',
+      name: fileData.fileName || req.file.originalname,
       size: `${(req.file.size / (1024 * 1024)).toFixed(2)} MB`,
-      link: previewUrl
+      sizeBytes: req.file.size,
+      fileId: fileData.fileId,
+      link: directLink,
+      downloadPage: downloadPage
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'আপলোড ব্যর্থ হয়েছে।' });
+    console.error('Upload Error:', error?.response?.data || error.message);
+    res.status(500).json({ error: 'Upload failed via Gofile.' });
   }
 });
 
-// ২. ফাইলের ডিরেক্ট লিংক আনার API (অটো ডাউনলোড হবে না)
+// প্রিভিউ ও ডিরেক্ট লিঙ্কের API
 app.get('/api/file-url', async (req, res) => {
   try {
-    const { id } = req.query;
-    if (!id) return res.status(400).json({ error: 'ID missing' });
-
-    const dbxPath = Buffer.from(id, 'base64').toString('ascii');
-    const linkRes = await dbx.filesGetTemporaryLink({ path: dbxPath });
-
-    res.json({ url: linkRes.result.link });
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: 'URL missing' });
+    res.json({ url });
   } catch (err) {
-    console.error(err);
-    res.status(404).json({ error: 'ফাইল পাওয়া যায়নি।' });
+    res.status(500).json({ error: 'Failed to fetch file URL.' });
   }
 });
 

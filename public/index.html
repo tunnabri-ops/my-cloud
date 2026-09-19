@@ -49,7 +49,7 @@
     }
     .search-box input { background: transparent; border: none; color: #fff; outline: none; width: 100%; font-size: 13px; }
 
-    /* 10 TB Storage Indicator */
+    /* 10 TB Capacity Bar */
     .storage-banner {
       background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px;
       padding: 16px 20px; margin-bottom: 25px; backdrop-filter: blur(12px);
@@ -106,7 +106,7 @@
     }
     .btn-action:hover { background: #0369a1; }
 
-    /* Modal for Preview */
+    /* Modal */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(10px);
       display: none; align-items: center; justify-content: center; z-index: 100; padding: 15px;
@@ -184,7 +184,7 @@
     </div>
 
     <div class="notice-bar">
-      <span><i class="fa-solid fa-shield-halved"></i> <strong>লাইফটাইম রাখার নিয়ম:</strong> ফাইল আজীবন অক্ষত রাখতে প্রতি ৩০ দিনে অন্তত একবার সাইট থেকে ফাইলটি ওপেন বা ডাউনলোড করুন।</span>
+      <span><i class="fa-solid fa-shield-halved"></i> <strong>লাইফটাইম রাখার নিয়ম:</strong> ফাইল আজীবন রাখতে প্রতি ৩০ দিনে অন্তত একবার সাইট থেকে ফাইলটি ওপেন বা ডাউনলোড করুন।</span>
       <button onclick="clearHistory()"><i class="fa-solid fa-trash"></i> হিস্ট্রি মুছুন</button>
     </div>
 
@@ -197,7 +197,7 @@
 
   </div>
 
-  <!-- In-Site Preview & Download Modal -->
+  <!-- In-Site Preview Modal -->
   <div class="modal-overlay" id="previewModal" onclick="if(event.target.id==='previewModal') closeModal()">
     <div class="modal-box">
       <div class="modal-header">
@@ -216,7 +216,7 @@
   </div>
 
   <script>
-    // Particles
+    // Particle Canvas Animation
     const canvas = document.getElementById('particleCanvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
@@ -258,7 +258,7 @@
     function getFiles() { return JSON.parse(localStorage.getItem('my_cloud_files') || '[]'); }
     function saveFiles(files) { localStorage.setItem('my_cloud_files', JSON.stringify(files)); }
 
-    // Upload directly to cloud
+    // Upload directly to provider
     async function handleFileUpload(file) {
       if (!file) return;
 
@@ -305,6 +305,7 @@
                 name: d.fileName || file.name,
                 bytes: file.size,
                 size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+                downloadPage: d.downloadPage,
                 date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
               });
               saveFiles(files);
@@ -373,21 +374,22 @@
           </div>
           <div class="card-actions">
             <button class="btn-action" onclick="openPreview(${idx})"><i class="fa-solid fa-eye"></i> View</button>
-            <button class="btn-action" onclick="downloadInPage('${f.fileId}', '${f.name}')" title="Download"><i class="fa-solid fa-download"></i></button>
+            <button class="btn-action" onclick="triggerDownload('${f.fileId}', '${f.downloadPage}')" title="Download"><i class="fa-solid fa-download"></i></button>
           </div>
         `;
         grid.appendChild(card);
       });
     }
 
-    // Direct in-page download (User never leaves page)
-    function downloadInPage(fileId, fileName) {
-      const downloadUrl = `/api/stream?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`;
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = downloadUrl;
-      document.body.appendChild(iframe);
-      setTimeout(() => { document.body.removeChild(iframe); }, 15000);
+    // Direct Browser Download (Doesn't get blocked by Vercel payload limits)
+    function triggerDownload(fileId, downloadPage) {
+      const targetUrl = downloadPage || `https://gofile.io/d/${fileId}`;
+      const win = window.open(targetUrl, '_blank');
+      if (win) {
+        win.focus();
+      } else {
+        location.href = targetUrl;
+      }
     }
 
     async function openPreview(index) {
@@ -395,53 +397,36 @@
       if (!file) return;
 
       document.getElementById('modalFileName').innerText = file.name;
-      document.getElementById('modalDownloadBtn').onclick = () => downloadInPage(file.fileId, file.name);
+      document.getElementById('modalDownloadBtn').onclick = () => triggerDownload(file.fileId, file.downloadPage);
 
       const ext = file.name.split('.').pop().toLowerCase();
       const body = document.getElementById('modalPreviewBody');
-      body.innerHTML = '<div style="color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> ফাইল লোড হচ্ছে...</div>';
-      document.getElementById('previewModal').style.display = 'flex';
+      body.innerHTML = '';
 
-      const fileUrl = `/api/stream?fileId=${file.fileId}&fileName=${encodeURIComponent(file.name)}`;
-
-      try {
-        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-          body.innerHTML = `<img src="${fileUrl}" class="preview-media" alt="${file.name}" />`;
-        } else if (['mp4', 'webm'].includes(ext)) {
-          body.innerHTML = `<video controls autoplay class="preview-media" src="${fileUrl}"></video>`;
-        } else if (['mp3', 'wav'].includes(ext)) {
-          body.innerHTML = `<audio controls autoplay style="width: 100%;" src="${fileUrl}"></audio>`;
-        } else if (ext === 'pdf') {
-          body.innerHTML = `<iframe src="${fileUrl}" style="width:100%; height:55vh; border:none; border-radius:8px;"></iframe>`;
-        } else if (['txt', 'js', 'json', 'html', 'css', 'py'].includes(ext)) {
-          const res = await fetch(fileUrl);
-          const text = await res.text();
-          body.innerHTML = `<pre class="text-preview-box">${escapeHtml(text)}</pre>`;
-        } else {
-          fallbackPreview(file.name);
-        }
-      } catch (e) {
-        fallbackPreview(file.name);
+      if (['txt', 'js', 'json', 'html', 'css', 'py', 'md'].includes(ext)) {
+        body.innerHTML = `
+          <div style="text-align: center; padding: 25px;">
+            <i class="fa-solid fa-file-code" style="font-size: 55px; color: var(--accent); margin-bottom: 12px;"></i>
+            <h4 style="margin-bottom: 8px;">${file.name}</h4>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Size: ${file.size}</p>
+            <p style="color: #4ade80; font-size: 12px;"><i class="fa-solid fa-check"></i> File ready for download.</p>
+          </div>
+        `;
+      } else {
+        body.innerHTML = `
+          <div style="text-align: center; padding: 25px;">
+            <i class="fa-solid ${getFileIcon(file.name)}" style="font-size: 55px; color: var(--accent); margin-bottom: 12px;"></i>
+            <h4 style="margin-bottom: 8px;">${file.name}</h4>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Size: ${file.size}</p>
+            <p style="color: #4ade80; font-size: 12px;"><i class="fa-solid fa-check"></i> File ready for download.</p>
+          </div>
+        `;
       }
-    }
 
-    function escapeHtml(text) {
-      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
-
-    function fallbackPreview(fileName) {
-      const body = document.getElementById('modalPreviewBody');
-      body.innerHTML = `
-        <div style="text-align: center; padding: 25px;">
-          <i class="fa-solid ${getFileIcon(fileName)}" style="font-size: 55px; color: var(--accent); margin-bottom: 12px;"></i>
-          <p style="color: var(--text-muted); font-size: 13px;">ফাইলটির ইন-সাইট প্রিভিউ সরাসরি দেখার মতো নয়। নিচের বাটনে চাপ দিয়ে ডাউনলোড করে নিন।</p>
-        </div>
-      `;
+      document.getElementById('previewModal').style.display = 'flex';
     }
 
     function closeModal() {
-      const body = document.getElementById('modalPreviewBody');
-      body.innerHTML = '';
       document.getElementById('previewModal').style.display = 'none';
     }
 

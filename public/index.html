@@ -5,27 +5,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ক্লাউড ড্রাইভ</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0b0f19; margin: 0; color: #fff; padding: 20px; box-sizing: border-box; }
-    .card { background: #111827; border: 1px solid #1f2937; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 100%; max-width: 400px; text-align: center; }
-    h2 { margin-bottom: 8px; font-size: 22px; color: #38bdf8; }
-    p { color: #9ca3af; font-size: 13px; margin-top: 0; }
-    input[type="file"] { margin: 20px 0; width: 100%; color: #9ca3af; }
-    button { background: #2563eb; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 15px; width: 100%; font-weight: 600; }
-    button:hover { background: #1d4ed8; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; margin: 0; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+    .card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 500px; text-align: center; }
+    h2 { margin-top: 0; color: #38bdf8; }
+    input[type="file"] { margin: 20px 0; width: 100%; color: #94a3b8; }
+    button, .btn { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: 600; text-decoration: none; display: inline-block; }
+    button:hover, .btn:hover { background: #1d4ed8; }
     #status { margin-top: 20px; font-size: 14px; text-align: left; word-break: break-all; }
+    
+    /* Google Drive Style Preview Box */
+    .preview-container { margin-top: 20px; background: #0b0f19; padding: 15px; border-radius: 8px; border: 1px solid #334155; }
+    .preview-media { max-width: 100%; max-height: 350px; border-radius: 6px; margin-bottom: 15px; }
   </style>
 </head>
 <body>
 
-  <div class="card">
+  <!-- ফাইল আপলোড বক্স -->
+  <div class="card" id="uploadCard">
     <h2>📦 ক্লাউড স্টোরেজ</h2>
-    <p>ফাইল আপলোড করুন, সরাসরি আপনার ড্রাইভে সেভ হবে।</p>
+    <p style="color:#94a3b8; font-size: 13px;">ফাইল আপলোড করুন, গুগল ড্রাইভের মতো প্রিভিউ তৈরি হবে।</p>
     <input type="file" id="fileInput" />
     <button id="uploadBtn" onclick="upload()">আপলোড করুন</button>
     <div id="status"></div>
   </div>
 
+  <!-- গুগল ড্রাইভের মতো প্রিভিউ পেজ -->
+  <div class="card" id="previewCard" style="display: none;">
+    <h3 id="prevFileName" style="color: #38bdf8; margin: 0 0 15px 0;"></h3>
+    <div class="preview-container" id="mediaArea"></div>
+    <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+      <a id="downloadBtn" class="btn" href="#" download>ডাউনলোড করুন</a>
+      <a href="/" class="btn" style="background: #475569;">নতুন ফাইল আপলোড</a>
+    </div>
+  </div>
+
   <script>
+    // URL চেক করা হচ্ছে ইউজার প্রিভিউ লিঙ্কে এসেছে কি না
+    const urlParams = new URLSearchParams(window.location.search);
+    const fileId = urlParams.get('file');
+    const fileName = urlParams.get('name');
+
+    if (fileId) {
+      document.getElementById('uploadCard').style.display = 'none';
+      document.getElementById('previewCard').style.display = 'block';
+      document.getElementById('prevFileName').innerText = fileName || 'ফাইল ভিউয়ার';
+
+      const fileSrc = `/api/view?id=${fileId}`;
+      const mediaArea = document.getElementById('mediaArea');
+      const downloadBtn = document.getElementById('downloadBtn');
+      downloadBtn.href = fileSrc;
+
+      const ext = (fileName || '').split('.').pop().toLowerCase();
+
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+        mediaArea.innerHTML = `<img src="${fileSrc}" class="preview-media" alt="Preview" />`;
+      } else if (['mp4', 'webm'].includes(ext)) {
+        mediaArea.innerHTML = `<video src="${fileSrc}" controls class="preview-media" style="width:100%;"></video>`;
+      } else if (['mp3', 'wav', 'ogg'].includes(ext)) {
+        mediaArea.innerHTML = `<audio src="${fileSrc}" controls style="width:100%;"></audio>`;
+      } else if (ext === 'pdf') {
+        mediaArea.innerHTML = `<iframe src="${fileSrc}" style="width:100%; height:350px; border:none;"></iframe>`;
+      } else {
+        mediaArea.innerHTML = `<div style="padding: 30px 10px; color: #94a3b8;">📄 প্রিভিউ উপলভ্য নয়। ফাইলটি দেখতে নিচের বাটনে ক্লিক করে ডাউনলোড করুন।</div>`;
+      }
+    }
+
     async function upload() {
       const input = document.getElementById('fileInput');
       const status = document.getElementById('status');
@@ -38,7 +82,7 @@
 
       btn.disabled = true;
       btn.innerText = 'আপলোড হচ্ছে...';
-      status.innerHTML = '<span style="color: #38bdf8;">ফাইল প্রসেস হচ্ছে...</span>';
+      status.innerHTML = '<span style="color: #38bdf8;">ফাইল সেভ হচ্ছে...</span>';
 
       const formData = new FormData();
       formData.append('userFile', input.files[0]);
@@ -48,12 +92,13 @@
         const data = await res.json();
 
         if (res.ok) {
-          status.innerHTML = '<span style="color: #22c55e;"><b>' + data.message + '</b></span><br>' +
-                             'ফাইল: ' + data.name + '<br>' +
-                             'সাইজ: ' + data.size + '<br>' +
-                             '<a href="' + data.link + '" target="_blank" style="color:#38bdf8; text-decoration: underline;">ভিউ লিঙ্ক</a>';
+          status.innerHTML = `
+            <span style="color: #22c55e;"><b>আপলোড সফল হয়েছে!</b></span><br>
+            ফাইল: ${data.name} (${data.size})<br><br>
+            👉 <a href="${data.link}" style="color:#38bdf8; text-decoration: underline; font-weight: bold;">ভিউ পেজ ওপেন করুন</a>
+          `;
         } else {
-          status.innerHTML = '<span style="color: #ef4444;">' + data.error + '</span>';
+          status.innerHTML = `<span style="color: #ef4444;">${data.error}</span>`;
         }
       } catch (err) {
         status.innerHTML = '<span style="color: #ef4444;">সার্ভারে কানেক্ট করা যায়নি!</span>';

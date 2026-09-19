@@ -3,910 +3,224 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Cloud • 10 TB Lifetime Storage</title>
-  <!-- Google Fonts & Font Awesome Icons -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
+  <title>My Cloud - 10 TB Lifetime Storage</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      --bg-dark: #050814;
-      --panel-bg: rgba(13, 20, 42, 0.72);
-      --card-bg: rgba(18, 28, 58, 0.58);
-      --card-hover: rgba(26, 40, 80, 0.75);
-      --glass-border: rgba(56, 189, 248, 0.22);
-      --glass-border-hover: rgba(56, 189, 248, 0.55);
-      --cyan-neon: #38bdf8;
-      --purple-neon: #a855f7;
-      --emerald-neon: #34d399;
-      --rose-neon: #fb7185;
-      --amber-neon: #fbbf24;
-      --text-glow: 0 0 16px rgba(56, 189, 248, 0.6);
-      --box-glow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-      --text-main: #f1f5f9;
-      --text-dim: #94a3b8;
+      --bg: #070b19;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(56, 189, 248, 0.2);
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+      --purple-glow: rgba(168, 85, 247, 0.3);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-      -webkit-font-smoothing: antialiased;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; position: relative; }
 
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-      position: relative;
+    .glow-orb-1, .glow-orb-2 {
+      position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0;
+      animation: floatOrb 18s ease-in-out infinite alternate;
     }
-
-    /* Ambient Background & Particles */
-    #ambientCanvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .cyber-orb {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(120px);
-      pointer-events: none;
-      opacity: 0.35;
-      z-index: 0;
-      animation: floatOrb 20s ease-in-out infinite alternate;
-    }
-    .orb-1 { width: 480px; height: 480px; background: radial-gradient(circle, #38bdf8, transparent 70%); top: -120px; left: -120px; }
-    .orb-2 { width: 520px; height: 520px; background: radial-gradient(circle, #a855f7, transparent 70%); bottom: -150px; right: -150px; animation-duration: 24s; }
+    .glow-orb-1 { width: 450px; height: 450px; background: var(--accent-glow); top: -100px; left: -100px; }
+    .glow-orb-2 { width: 550px; height: 550px; background: var(--purple-glow); bottom: -150px; right: -150px; }
 
     @keyframes floatOrb {
       0% { transform: translate(0, 0) scale(1); }
-      50% { transform: translate(70px, 50px) scale(1.12); }
-      100% { transform: translate(-50px, 90px) scale(0.95); }
+      100% { transform: translate(60px, 80px) scale(1.1); }
     }
 
-    /* App Shell */
-    .app-wrapper {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      width: 100%;
-      height: 100%;
+    #particleCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+    .app-container { position: relative; z-index: 2; max-width: 1100px; margin: 0 auto; padding: 25px 20px; }
+
+    .header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;
+      background: var(--card-bg); backdrop-filter: blur(16px);
+      padding: 16px 24px; border-radius: 18px; border: 1px solid var(--card-border);
+      flex-wrap: wrap; gap: 15px;
+    }
+    .brand { font-size: 22px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 10px; }
+    .brand i { color: var(--accent); filter: drop-shadow(0 0 10px var(--accent)); }
+    .search-box {
+      background: rgba(11, 19, 43, 0.7); border: 1px solid var(--card-border); border-radius: 25px;
+      padding: 8px 16px; display: flex; align-items: center; gap: 10px; width: 280px;
+    }
+    .search-box input { background: transparent; border: none; color: #fff; outline: none; width: 100%; font-size: 13px; }
+
+    /* 10 TB Storage Indicator */
+    .storage-banner {
+      background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px;
+      padding: 16px 20px; margin-bottom: 25px; backdrop-filter: blur(12px);
+    }
+    .storage-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; font-weight: 600; }
+    .storage-bar-bg { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.08); border-radius: 10px; overflow: hidden; }
+    .storage-bar-fill { width: 0.1%; height: 100%; background: linear-gradient(90deg, #38bdf8, #a855f7); border-radius: 10px; transition: width 0.3s; }
+
+    /* Upload Zone */
+    .upload-zone {
+      background: var(--card-bg); backdrop-filter: blur(16px); border-radius: 20px;
+      border: 2px dashed var(--card-border); padding: 35px 25px; text-align: center;
+      cursor: pointer; transition: 0.3s; position: relative; margin-bottom: 25px;
+    }
+    .upload-zone:hover { border-color: var(--accent); box-shadow: 0 0 30px var(--accent-glow); }
+    .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .upload-icon { font-size: 45px; color: var(--accent); margin-bottom: 10px; animation: bounce 2s infinite ease-in-out; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+
+    .progress-box { display: none; margin-top: 15px; }
+    .progress-bar-bg { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.08); border-radius: 10px; overflow: hidden; }
+    .progress-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #38bdf8, #a855f7); transition: width 0.2s; }
+    .progress-text { font-size: 12px; color: var(--accent); margin-top: 6px; font-weight: 600; }
+
+    .notice-bar {
+      background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.25);
+      border-radius: 12px; padding: 12px 18px; font-size: 12px; color: #fde047;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 25px;
+    }
+    .notice-bar button {
+      background: rgba(234, 179, 8, 0.2); border: 1px solid rgba(234, 179, 8, 0.4);
+      color: #fef08a; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px;
     }
 
-    /* Glass Sidebar */
-    .sidebar {
-      width: 320px;
-      background: var(--panel-bg);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border-right: 1px solid var(--glass-border);
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      box-shadow: var(--box-glow);
-      flex-shrink: 0;
-    }
+    .section-title { font-size: 15px; font-weight: 700; color: var(--text-muted); margin-bottom: 16px; display: flex; justify-content: space-between; }
+    .file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      text-decoration: none;
-    }
-    .brand-icon {
-      width: 46px;
-      height: 46px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #0284c7, #9333ea);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      color: #fff;
-      box-shadow: 0 0 22px rgba(56, 189, 248, 0.5);
-      animation: pulseGlow 3s infinite alternate;
-    }
-    @keyframes pulseGlow {
-      0% { box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
-      100% { box-shadow: 0 0 26px rgba(168, 85, 247, 0.85); }
-    }
-    .brand-text h1 {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      background: linear-gradient(120deg, #f8fafc, #38bdf8, #c084fc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .brand-text span {
-      font-size: 11px;
-      color: var(--cyan-neon);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 600;
-    }
-
-    /* Upload Trigger Button */
-    .upload-trigger-container {
-      position: relative;
-      margin: 8px 0;
-    }
-    .btn-cyber-upload {
-      width: 100%;
-      background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #7c3aed 100%);
-      background-size: 200% 200%;
-      color: white;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      padding: 14px 20px;
-      border-radius: 14px;
-      font-size: 14px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      cursor: pointer;
-      box-shadow: 0 4px 20px rgba(2, 132, 199, 0.45);
-      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-      animation: gradientShift 6s ease infinite;
-    }
-    .btn-cyber-upload:hover {
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 8px 30px rgba(124, 58, 237, 0.65);
-      border-color: rgba(255, 255, 255, 0.45);
-    }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    .upload-trigger-container input[type="file"] {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    /* Navigation */
-    .nav-menu {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      color: var(--text-dim);
-      text-decoration: none;
-      font-size: 13.5px;
-      font-weight: 500;
-      transition: all 0.25s ease;
-      cursor: pointer;
-      border: 1px solid transparent;
-    }
-    .nav-item:hover, .nav-item.active {
-      background: rgba(56, 189, 248, 0.1);
-      color: #38bdf8;
-      border-color: rgba(56, 189, 248, 0.25);
-      transform: translateX(4px);
-    }
-    .nav-item.danger:hover {
-      background: rgba(251, 113, 133, 0.1);
-      color: var(--rose-neon);
-      border-color: rgba(251, 113, 133, 0.3);
-    }
-
-    /* 10 TB Capacity Meter Card */
-    .storage-capacity-card {
-      margin-top: auto;
-      background: linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.5));
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-    }
-    .capacity-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .capacity-badge {
-      background: rgba(52, 211, 153, 0.15);
-      color: var(--emerald-neon);
-      border: 1px solid rgba(52, 211, 153, 0.3);
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 10.5px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .capacity-track {
-      width: 100%;
-      height: 8px;
-      background: rgba(0, 0, 0, 0.4);
-      border-radius: 10px;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .capacity-fill {
-      height: 100%;
-      width: 0.1%;
-      min-width: 3px;
-      background: linear-gradient(90deg, #38bdf8, #a855f7);
-      border-radius: 10px;
-      box-shadow: 0 0 10px #38bdf8;
-      transition: width 0.5s ease;
-    }
-    .capacity-meta {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: var(--text-dim);
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    /* Lifetime Info Note */
-    .retention-hint {
-      font-size: 11px;
-      color: #cbd5e1;
-      line-height: 1.45;
-      padding: 10px;
-      background: rgba(251, 191, 36, 0.08);
-      border-radius: 10px;
-      border: 1px solid rgba(251, 191, 36, 0.2);
-    }
-    .retention-hint strong {
-      color: var(--amber-neon);
-    }
-
-    /* Main Content Area */
-    .main-viewport {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      position: relative;
-    }
-
-    /* Header Bar */
-    .header-bar {
-      padding: 18px 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-      border-bottom: 1px solid var(--glass-border);
-      background: rgba(6, 9, 19, 0.45);
-      backdrop-filter: blur(14px);
-    }
-    .search-wrapper {
-      position: relative;
-      width: 360px;
-      max-width: 100%;
-    }
-    .search-wrapper i {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-dim);
-      font-size: 13px;
-      pointer-events: none;
-    }
-    .search-input {
-      width: 100%;
-      background: var(--card-bg);
-      border: 1px solid var(--glass-border);
-      border-radius: 30px;
-      padding: 10px 18px 10px 38px;
-      color: white;
-      outline: none;
-      font-size: 13px;
-      transition: all 0.3s ease;
-    }
-    .search-input:focus {
-      border-color: var(--cyan-neon);
-      box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
-      background: rgba(18, 28, 58, 0.85);
-    }
-
-    .cloud-pill {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(52, 211, 153, 0.08);
-      border: 1px solid rgba(52, 211, 153, 0.3);
-      padding: 6px 14px;
-      border-radius: 20px;
-      color: var(--emerald-neon);
-      font-size: 12px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--emerald-neon);
-      box-shadow: 0 0 8px var(--emerald-neon);
-      animation: pulseDot 2s infinite;
-    }
-    @keyframes pulseDot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.8); }
-    }
-
-    /* Workspace Content */
-    .workspace-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 28px 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    /* Interactive Drop Zone */
-    .drop-zone {
-      border: 2px dashed var(--glass-border);
-      background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.06), rgba(13, 20, 42, 0.3));
-      border-radius: 20px;
-      padding: 36px 20px;
-      text-align: center;
-      cursor: pointer;
-      position: relative;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow: hidden;
-    }
-    .drop-zone.dragover {
-      border-color: var(--cyan-neon);
-      background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.18), rgba(13, 20, 42, 0.5));
-      box-shadow: 0 0 32px rgba(56, 189, 248, 0.35);
-      transform: scale(1.01);
-    }
-    .drop-zone-icon {
-      font-size: 42px;
-      margin-bottom: 12px;
-      background: linear-gradient(135deg, #38bdf8, #a855f7);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: bounce 2.4s infinite ease-in-out;
-    }
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
-    }
-    .drop-zone h3 {
-      font-size: 17px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .drop-zone p {
-      font-size: 12.5px;
-      color: var(--text-dim);
-    }
-
-    /* Live Progress Bar */
-    .upload-progress-wrapper {
-      display: none;
-      background: var(--card-bg);
-      border: 1px solid var(--cyan-neon);
-      border-radius: 14px;
-      padding: 16px 20px;
-      box-shadow: 0 0 25px rgba(56, 189, 248, 0.25);
-      animation: fadeIn 0.3s ease;
-    }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .progress-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      margin-bottom: 8px;
-    }
-    .progress-bar-track {
-      height: 8px;
-      width: 100%;
-      background: rgba(0, 0, 0, 0.45);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    .progress-bar-fill {
-      width: 0%;
-      height: 100%;
-      background: linear-gradient(90deg, #0284c7, #38bdf8, #a855f7);
-      box-shadow: 0 0 12px #38bdf8;
-      border-radius: 10px;
-      transition: width 0.2s ease;
-    }
-
-    /* Section Header */
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .section-header h2 {
-      font-size: 17px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .counter-pill {
-      font-size: 11px;
-      padding: 3px 10px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text-dim);
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    /* File Grid */
-    .file-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-      gap: 18px;
-    }
     .file-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(14px);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      position: relative;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      animation: cardAppear 0.35s ease forwards;
+      background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--card-border);
+      border-radius: 16px; padding: 16px; transition: 0.25s;
     }
-    @keyframes cardAppear {
-      from { opacity: 0; transform: translateY(12px) scale(0.96); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+    .file-card:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 10px 20px rgba(56, 189, 248, 0.2); }
+    .file-thumb {
+      height: 90px; border-radius: 10px; background: rgba(0, 0, 0, 0.35); display: flex;
+      align-items: center; justify-content: center; font-size: 38px; color: var(--accent); margin-bottom: 10px; cursor: pointer;
     }
-    .file-card:hover {
-      transform: translateY(-5px);
-      border-color: var(--glass-border-hover);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.15);
-      background: var(--card-hover);
-    }
-    .file-thumb-container {
-      height: 95px;
-      border-radius: 10px;
-      background: rgba(0, 0, 0, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-    .file-icon-glow {
-      font-size: 38px;
-      transition: transform 0.3s ease;
-    }
-    .file-card:hover .file-icon-glow {
-      transform: scale(1.14);
-    }
+    .file-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+    .file-info { font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; }
 
-    .file-name {
-      font-size: 13px;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: var(--text-main);
-      cursor: pointer;
+    .card-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-action {
+      flex: 1; padding: 8px; border-radius: 8px; border: none; background: #0284c7; color: #fff;
+      font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
     }
-    .file-meta-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: var(--text-dim);
-      font-family: 'JetBrains Mono', monospace;
-    }
+    .btn-action:hover { background: #0369a1; }
 
-    /* In-Site Action Buttons (No External Links / No Copy) */
-    .file-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 4px;
-    }
-    .btn-card-preview {
-      flex: 1;
-      padding: 7px 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      border: 1px solid var(--glass-border);
-      background: rgba(56, 189, 248, 0.12);
-      color: #38bdf8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .btn-card-preview:hover {
-      background: rgba(56, 189, 248, 0.25);
-      border-color: var(--cyan-neon);
-      transform: translateY(-1px);
-    }
-    .btn-card-dl {
-      padding: 7px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      border: 1px solid rgba(52, 211, 153, 0.3);
-      background: rgba(52, 211, 153, 0.1);
-      color: var(--emerald-neon);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .btn-card-dl:hover {
-      background: rgba(52, 211, 153, 0.22);
-      border-color: var(--emerald-neon);
-      transform: translateY(-1px);
-    }
-
-    /* In-Site Preview Modal */
+    /* Modal for Preview */
     .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(3, 7, 18, 0.88);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 20px;
+      position: fixed; inset: 0; background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center; z-index: 100; padding: 15px;
     }
-    .modal-card {
-      background: #0d152d;
-      border: 1px solid var(--glass-border-hover);
-      border-radius: 20px;
-      width: 100%;
-      max-width: 800px;
-      max-height: 90vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(56, 189, 248, 0.2);
-      overflow: hidden;
-      animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    @keyframes modalPop {
-      from { transform: scale(0.95); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+    .modal-box {
+      background: #0f172a; border: 1px solid var(--card-border); border-radius: 16px;
+      width: 100%; max-width: 750px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;
     }
     .modal-header {
-      padding: 18px 24px;
-      border-bottom: 1px solid var(--glass-border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .modal-title {
-      font-size: 15px;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 80%;
-      color: var(--text-main);
-    }
-    .modal-close {
-      background: none;
-      border: none;
-      color: var(--text-dim);
-      font-size: 18px;
-      cursor: pointer;
-      transition: color 0.2s ease;
-    }
-    .modal-close:hover {
-      color: var(--rose-neon);
+      padding: 16px 20px; border-bottom: 1px solid var(--card-border); display: flex;
+      justify-content: space-between; align-items: center;
     }
     .modal-body {
-      padding: 20px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 280px;
-      background: rgba(0, 0, 0, 0.2);
+      padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 250px;
     }
-    .preview-media {
-      max-width: 100%;
-      max-height: 56vh;
-      border-radius: 10px;
-      object-fit: contain;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    }
-    .preview-text-box {
-      width: 100%;
-      max-height: 56vh;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid var(--glass-border);
-      border-radius: 10px;
-      padding: 16px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: #e2e8f0;
-      overflow: auto;
-      white-space: pre-wrap;
-      text-align: left;
+    .text-preview-box {
+      width: 100%; max-height: 50vh; background: rgba(0,0,0,0.5); border: 1px solid var(--card-border);
+      border-radius: 8px; padding: 15px; color: #e2e8f0; font-family: monospace; font-size: 13px;
+      white-space: pre-wrap; overflow-y: auto; text-align: left;
     }
     .modal-footer {
-      padding: 16px 24px;
-      border-top: 1px solid var(--glass-border);
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
+      padding: 14px 20px; border-top: 1px solid var(--card-border); display: flex; justify-content: flex-end; gap: 10px;
     }
-    .btn-download-modal {
-      background: linear-gradient(135deg, #0284c7, #2563eb);
-      color: white;
-      padding: 10px 22px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      cursor: pointer;
-      transition: all 0.25s ease;
-    }
-    .btn-download-modal:hover {
-      box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
-      transform: translateY(-2px);
-    }
+    .preview-media { max-width: 100%; max-height: 55vh; border-radius: 8px; object-fit: contain; }
 
-    /* Toast Notification */
-    .toast-box {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: rgba(13, 20, 42, 0.95);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
-      padding: 12px 20px;
-      color: white;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      z-index: 2000;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-      transform: translateY(100px);
-      opacity: 0;
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .toast-box.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    /* Mobile Responsive Adaptation */
-    @media (max-width: 900px) {
-      body {
-        height: auto;
-        min-height: 100vh;
-        overflow-y: auto;
-      }
-      .app-wrapper {
-        flex-direction: column;
-      }
-      .sidebar {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid var(--glass-border);
-        padding: 18px 20px;
-        gap: 14px;
-      }
-      .header-bar {
-        padding: 14px 20px;
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .search-wrapper {
-        width: 100%;
-      }
-      .workspace-content {
-        padding: 20px;
-        gap: 20px;
-      }
-      .file-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 12px;
-      }
-      .file-thumb-container {
-        height: 80px;
-      }
-      .file-icon-glow {
-        font-size: 30px;
-      }
+    @media (max-width: 640px) {
+      .header { flex-direction: column; gap: 12px; }
+      .search-box { width: 100%; }
+      .file-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
     }
   </style>
 </head>
 <body>
 
-  <canvas id="ambientCanvas"></canvas>
-  <div class="cyber-orb orb-1"></div>
-  <div class="cyber-orb orb-2"></div>
+  <div class="glow-orb-1"></div>
+  <div class="glow-orb-2"></div>
+  <canvas id="particleCanvas"></canvas>
 
-  <div class="app-wrapper">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <a href="#" class="brand">
-        <div class="brand-icon">
-          <i class="fa-solid fa-cloud"></i>
-        </div>
-        <div class="brand-text">
-          <h1>MY CLOUD</h1>
-          <span>10 TB LIFETIME FREE</span>
-        </div>
-      </a>
+  <div class="app-container">
 
-      <!-- Primary Upload Button -->
-      <div class="upload-trigger-container">
-        <button class="btn-cyber-upload">
-          <i class="fa-solid fa-cloud-arrow-up"></i> Upload File
-        </button>
-        <input type="file" id="primaryFileInput" onchange="initiateDirectUpload(this.files[0])" />
+    <div class="header">
+      <div class="brand">
+        <i class="fa-solid fa-cloud"></i> My Cloud
       </div>
-
-      <!-- Navigation -->
-      <nav class="nav-menu">
-        <div class="nav-item active">
-          <i class="fa-solid fa-folder-open"></i> My Drive
-        </div>
-        <div class="nav-item danger" onclick="purgeLocalHistory()">
-          <i class="fa-solid fa-trash-can"></i> Clear History
-        </div>
-      </nav>
-
-      <!-- 10 TB Storage Meter -->
-      <div class="storage-capacity-card">
-        <div class="capacity-header">
-          <span><i class="fa-solid fa-hard-drive" style="color:var(--cyan-neon);"></i> Cloud Storage</span>
-          <span class="capacity-badge">10 TB FREE</span>
-        </div>
-        <div class="capacity-track">
-          <div class="capacity-fill" id="capacityFill"></div>
-        </div>
-        <div class="capacity-meta">
-          <span id="capacityUsedLabel">0.00 GB Used</span>
-          <span>10,000 GB Total</span>
-        </div>
-        <div class="retention-hint">
-          <i class="fa-solid fa-shield-halved" style="color:var(--amber-neon);"></i>
-          <strong>Lifetime Active:</strong> Open or preview your stored files at least once every 30 days.
-        </div>
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted);"></i>
+        <input type="text" id="searchInput" placeholder="Search files..." oninput="renderFiles()" />
       </div>
-    </aside>
+    </div>
 
-    <!-- Main Viewport -->
-    <main class="main-viewport">
-      <!-- Header Bar -->
-      <header class="header-bar">
-        <div class="search-wrapper">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="searchInput" class="search-input" placeholder="Search my files..." oninput="displaySavedFiles()" />
-        </div>
-        <div class="cloud-pill">
-          <span class="status-dot"></span>
-          <span>10 TB CLUSTER ACTIVE</span>
-        </div>
-      </header>
-
-      <!-- Workspace Area -->
-      <div class="workspace-content">
-        <!-- Interactive Drag & Drop Area -->
-        <div class="drop-zone" id="dropZone" onclick="document.getElementById('primaryFileInput').click()">
-          <div class="drop-zone-icon">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
-          </div>
-          <h3>Drag and drop files anywhere to upload</h3>
-          <p>Unlimited file size supported • Direct high-speed streaming</p>
-        </div>
-
-        <!-- Live Upload Progress -->
-        <div class="upload-progress-wrapper" id="progressWrapper">
-          <div class="progress-info">
-            <span id="progressStatusLabel"><i class="fa-solid fa-spinner fa-spin"></i> Initializing stream...</span>
-            <span id="progressPercentage" style="font-family:'JetBrains Mono'; color:#38bdf8;">0%</span>
-          </div>
-          <div class="progress-bar-track">
-            <div class="progress-bar-fill" id="progressBarFill"></div>
-          </div>
-        </div>
-
-        <!-- Files Section -->
-        <section>
-          <div class="section-header">
-            <h2>
-              <i class="fa-solid fa-folder-closed" style="color: #38bdf8;"></i>
-              Files in Cloud
-            </h2>
-            <span class="counter-pill" id="fileCounterBadge">0 files</span>
-          </div>
-
-          <div class="file-grid" id="filesDisplayGrid" style="margin-top: 18px;">
-            <!-- Dynamic File Cards Injected Here -->
-          </div>
-        </section>
+    <!-- 10 TB Capacity Bar -->
+    <div class="storage-banner">
+      <div class="storage-header">
+        <span><i class="fa-solid fa-hard-drive" style="color: var(--accent);"></i> Lifetime Cloud Space: 10 TB Free</span>
+        <span id="storageCountText" style="color: var(--accent);">0.00 GB / 10,000 GB</span>
       </div>
-    </main>
+      <div class="storage-bar-bg">
+        <div class="storage-bar-fill" id="storageBarFill"></div>
+      </div>
+    </div>
+
+    <!-- Upload Zone -->
+    <div class="upload-zone">
+      <input type="file" id="fileInput" onchange="handleFileUpload(this.files[0])" />
+      <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+      <div style="font-weight: 700; font-size: 16px; margin-bottom: 5px;">Upload Any File</div>
+      <div style="color: var(--text-muted); font-size: 13px;">Drag & Drop or Click to browse (High Speed, Unlimited Size)</div>
+
+      <div class="progress-box" id="progressBox">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">Uploading: 0%</div>
+      </div>
+    </div>
+
+    <div class="notice-bar">
+      <span><i class="fa-solid fa-shield-halved"></i> <strong>লাইফটাইম রাখার নিয়ম:</strong> ফাইল আজীবন অক্ষত রাখতে প্রতি ৩০ দিনে অন্তত একবার সাইট থেকে ফাইলটি ওপেন বা ডাউনলোড করুন।</span>
+      <button onclick="clearHistory()"><i class="fa-solid fa-trash"></i> হিস্ট্রি মুছুন</button>
+    </div>
+
+    <div class="section-title">
+      <span>My Stored Files</span>
+      <span id="fileCount" style="color: var(--accent);">0 files</span>
+    </div>
+
+    <div class="file-grid" id="filesGrid"></div>
+
   </div>
 
-  <!-- In-Site Preview Modal -->
-  <div class="modal-overlay" id="fileModal" onclick="if(event.target.id==='fileModal') closeFileModal()">
-    <div class="modal-card">
+  <!-- In-Site Preview & Download Modal -->
+  <div class="modal-overlay" id="previewModal" onclick="if(event.target.id==='previewModal') closeModal()">
+    <div class="modal-box">
       <div class="modal-header">
-        <h3 class="modal-title" id="modalFileName">Preview File</h3>
-        <button class="modal-close" onclick="closeFileModal()">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+        <div id="modalFileName" style="font-weight: 600; font-size: 14px; max-width: 80%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
+        <button onclick="closeModal()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px;"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <div class="modal-body" id="modalPreviewContent">
-        <!-- Dynamic Preview Rendered Here -->
-      </div>
+      <div class="modal-body" id="modalPreviewBody"></div>
 
       <div class="modal-footer">
-        <button class="btn-download-modal" id="modalDownloadBtn">
+        <button class="btn-action" id="modalDownloadBtn">
           <i class="fa-solid fa-download"></i> Download File
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Toast Notification -->
-  <div class="toast-box" id="systemToast">
-    <i class="fa-solid fa-circle-check" id="toastIcon" style="color:#34d399;"></i>
-    <span id="toastMessage">Action completed successfully</span>
-  </div>
-
   <script>
-    /* ==========================================================
-       1. Ambient Floating Particle Animation Canvas
-       ========================================================== */
-    const canvas = document.getElementById('ambientCanvas');
+    // Particles
+    const canvas = document.getElementById('particleCanvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
@@ -914,374 +228,231 @@
       constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 1.8 + 0.5;
+        this.size = Math.random() * 2 + 0.5;
         this.speedX = (Math.random() - 0.5) * 0.4;
         this.speedY = (Math.random() - 0.5) * 0.4;
-        this.color = Math.random() > 0.5 ? 'rgba(56, 189, 248, ' : 'rgba(168, 85, 247, ';
         this.alpha = Math.random() * 0.5 + 0.2;
       }
       update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
-        if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
-        if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+        this.x += this.speedX; this.y += this.speedY;
+        if (this.x < 0) this.x = canvas.width;
+        if (this.x > canvas.width) this.x = 0;
+        if (this.y < 0) this.y = canvas.height;
+        if (this.y > canvas.height) this.y = 0;
       }
       draw() {
-        ctx.fillStyle = this.color + this.alpha + ')';
+        ctx.fillStyle = `rgba(56, 189, 248, ${this.alpha})`;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
       }
     }
-
     for (let i = 0; i < 40; i++) particles.push(new Particle());
-
-    function animateAmbient() {
+    function animateParticles() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        p.update();
-        p.draw();
-      });
-      requestAnimationFrame(animateAmbient);
+      particles.forEach(p => { p.update(); p.draw(); });
+      requestAnimationFrame(animateParticles);
     }
-    animateAmbient();
+    animateParticles();
 
-    /* ==========================================================
-       2. Local Storage & 10 TB Capacity Calculation
-       ========================================================== */
-    function loadSavedFiles() {
-      try {
-        return JSON.parse(localStorage.getItem('my_cloud_files_v3') || '[]');
-      } catch {
-        return [];
-      }
-    }
+    function getFiles() { return JSON.parse(localStorage.getItem('my_cloud_files') || '[]'); }
+    function saveFiles(files) { localStorage.setItem('my_cloud_files', JSON.stringify(files)); }
 
-    function persistFiles(files) {
-      localStorage.setItem('my_cloud_files_v3', JSON.stringify(files));
-      updateCapacityMeter(files);
-    }
-
-    function updateCapacityMeter(files) {
-      const totalBytes = files.reduce((acc, f) => acc + (Number(f.bytes) || 0), 0);
-      const totalGB = (totalBytes / (1024 * 1024 * 1024)).toFixed(2);
-      const percent = Math.min(((totalGB / 10000) * 100), 100);
-
-      document.getElementById('capacityUsedLabel').innerText = `${totalGB} GB Used`;
-      document.getElementById('capacityFill').style.width = Math.max(percent, 0.2) + '%';
-    }
-
-    /* ==========================================================
-       3. Drag & Drop Listener
-       ========================================================== */
-    const dropZone = document.getElementById('dropZone');
-    ['dragenter', 'dragover'].forEach(eventName => {
-      dropZone.addEventListener(eventName, (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        dropZone.classList.add('dragover');
-      });
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-      dropZone.addEventListener(eventName, (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        dropZone.classList.remove('dragover');
-      });
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-      const dt = e.dataTransfer;
-      if (dt.files && dt.files[0]) {
-        initiateDirectUpload(dt.files[0]);
-      }
-    });
-
-    /* ==========================================================
-       4. Client-to-Gofile Upload Bypass (No Vercel Limit)
-       ========================================================== */
-    async function initiateDirectUpload(file) {
+    // Upload directly to cloud
+    async function handleFileUpload(file) {
       if (!file) return;
 
-      const progressWrapper = document.getElementById('progressWrapper');
-      const progressBarFill = document.getElementById('progressBarFill');
-      const progressStatusLabel = document.getElementById('progressStatusLabel');
-      const progressPercentage = document.getElementById('progressPercentage');
-      const fileInput = document.getElementById('primaryFileInput');
+      const pBox = document.getElementById('progressBox');
+      const pBar = document.getElementById('progressBar');
+      const pText = document.getElementById('progressText');
+      const input = document.getElementById('fileInput');
 
-      progressWrapper.style.display = 'block';
-      progressBarFill.style.width = '0%';
-      progressPercentage.innerText = '0%';
-      progressStatusLabel.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Connecting to cloud node for "${file.name}"...`;
+      pBox.style.display = 'block';
+      pBar.style.width = '0%';
+      pText.innerText = 'Connecting server...';
 
       try {
-        const nodeResponse = await fetch('/api/server');
-        if (!nodeResponse.ok) throw new Error('Could not contact upload node.');
-        const nodeData = await nodeResponse.json();
-
-        if (!nodeData.server) throw new Error('Cloud upload server unavailable.');
+        const sRes = await fetch('/api/server');
+        const sData = await sRes.json();
+        if (!sData.server) throw new Error('No server available');
 
         const formData = new FormData();
         formData.append('file', file);
-        if (nodeData.token) {
-          formData.append('token', nodeData.token);
-        }
+        if (sData.token) formData.append('token', sData.token);
 
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', `https://${nodeData.server}.gofile.io/contents/uploadfile`, true);
+        xhr.open('POST', `https://${sData.server}.gofile.io/contents/uploadfile`);
 
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
             const percent = Math.round((e.loaded / e.total) * 100);
-            progressBarFill.style.width = percent + '%';
-            progressPercentage.innerText = percent + '%';
-            progressStatusLabel.innerHTML = `<i class="fa-solid fa-arrow-up-from-bracket fa-bounce"></i> Uploading to My Cloud (${(e.loaded / (1024*1024)).toFixed(1)} / ${(e.total / (1024*1024)).toFixed(1)} MB)`;
+            pBar.style.width = percent + '%';
+            pText.innerText = `Uploading: ${percent}% (${(e.loaded / (1024 * 1024)).toFixed(1)} MB)`;
           }
         };
 
         xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const resData = JSON.parse(xhr.responseText);
-              if (resData.status === 'ok') {
-                const uploadedFile = resData.data;
-                const directStreamUrl = `https://${nodeData.server}.gofile.io/download/web/${uploadedFile.fileId}/${encodeURIComponent(uploadedFile.fileName || file.name)}`;
+          if (xhr.status === 200) {
+            const res = JSON.parse(xhr.responseText);
+            if (res.status === 'ok') {
+              pText.innerHTML = '<span style="color:#4ade80;">Upload Complete!</span>';
+              setTimeout(() => { pBox.style.display = 'none'; }, 2000);
 
-                const fileRecord = {
-                  id: uploadedFile.fileId || Date.now().toString(),
-                  name: uploadedFile.fileName || file.name,
-                  bytes: file.size,
-                  size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
-                  streamUrl: directStreamUrl,
-                  date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                };
-
-                const savedFiles = loadSavedFiles();
-                savedFiles.unshift(fileRecord);
-                persistFiles(savedFiles);
-                displaySavedFiles();
-
-                progressBarFill.style.width = '100%';
-                progressPercentage.innerText = '100%';
-                progressStatusLabel.innerHTML = `<span style="color:#34d399;"><i class="fa-solid fa-circle-check"></i> Upload Completed Successfully!</span>`;
-                notifyUser('File saved to your 10 TB Cloud!', 'success');
-
-                setTimeout(() => {
-                  progressWrapper.style.display = 'none';
-                }, 3000);
-              } else {
-                throw new Error('Cloud storage rejected file.');
-              }
-            } catch (err) {
-              handleUploadError(err.message);
+              const d = res.data;
+              const files = getFiles();
+              files.unshift({
+                fileId: d.fileId,
+                name: d.fileName || file.name,
+                bytes: file.size,
+                size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+              });
+              saveFiles(files);
+              renderFiles();
+            } else {
+              pText.innerText = 'Upload failed from cloud.';
             }
           } else {
-            handleUploadError('Server connection returned status ' + xhr.status);
+            pText.innerText = 'Upload request failed.';
           }
         };
 
-        xhr.onerror = () => handleUploadError('Network error uploading file.');
+        xhr.onerror = () => { pText.innerText = 'Network error!'; };
         xhr.send(formData);
 
       } catch (err) {
-        handleUploadError(err.message);
+        pText.innerText = 'Server error.';
       } finally {
-        fileInput.value = '';
+        input.value = '';
       }
     }
 
-    function handleUploadError(msg) {
-      const progressStatusLabel = document.getElementById('progressStatusLabel');
-      progressStatusLabel.innerHTML = `<span style="color:#fb7185;"><i class="fa-solid fa-triangle-exclamation"></i> Upload Failed: ${msg}</span>`;
-      notifyUser('Upload interrupted: ' + msg, 'error');
+    function getFileIcon(name) {
+      const ext = name.split('.').pop().toLowerCase();
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'fa-file-image';
+      if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) return 'fa-file-video';
+      if (['mp3', 'wav', 'aac'].includes(ext)) return 'fa-file-audio';
+      if (['zip', 'rar', '7z'].includes(ext)) return 'fa-file-zipper';
+      if (['pdf'].includes(ext)) return 'fa-file-pdf';
+      if (['txt', 'js', 'json', 'html', 'css', 'py'].includes(ext)) return 'fa-file-code';
+      return 'fa-file-lines';
     }
 
-    /* ==========================================================
-       5. File Card Presentation & Rendering
-       ========================================================== */
-    function resolveFileIcon(fileName) {
-      const ext = fileName.split('.').pop().toLowerCase();
-      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return { icon: 'fa-file-image', color: '#38bdf8' };
-      if (['mp4', 'mkv', 'mov', 'webm'].includes(ext)) return { icon: 'fa-file-video', color: '#a855f7' };
-      if (['mp3', 'wav', 'flac', 'aac'].includes(ext)) return { icon: 'fa-file-audio', color: '#fb7185' };
-      if (['pdf'].includes(ext)) return { icon: 'fa-file-pdf', color: '#f43f5e' };
-      if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return { icon: 'fa-file-zipper', color: '#fbbf24' };
-      if (['txt', 'js', 'html', 'css', 'json', 'py', 'ts', 'md', 'csv'].includes(ext)) return { icon: 'fa-file-code', color: '#34d399' };
-      return { icon: 'fa-file', color: '#94a3b8' };
+    function updateStorageIndicator(files) {
+      const totalBytes = files.reduce((acc, f) => acc + (f.bytes || 0), 0);
+      const usedGB = (totalBytes / (1024 * 1024 * 1024)).toFixed(2);
+      document.getElementById('storageCountText').innerText = `${usedGB} GB / 10,000 GB`;
+      const percent = Math.min(100, Math.max(0.1, (usedGB / 10000) * 100));
+      document.getElementById('storageBarFill').style.width = percent + '%';
     }
 
-    function displaySavedFiles() {
-      const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
-      const files = loadSavedFiles().filter(f => f.name.toLowerCase().includes(searchQuery));
-      const grid = document.getElementById('filesDisplayGrid');
-      const counter = document.getElementById('fileCounterBadge');
+    function renderFiles() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const allFiles = getFiles();
+      updateStorageIndicator(allFiles);
 
-      counter.innerText = `${files.length} file${files.length === 1 ? '' : 's'}`;
+      const files = allFiles.filter(f => f.name.toLowerCase().includes(q));
+      const grid = document.getElementById('filesGrid');
+      document.getElementById('fileCount').innerText = `${files.length} files`;
+
       grid.innerHTML = '';
-
-      if (files.length === 0) {
-        grid.innerHTML = `
-          <div style="grid-column: 1 / -1; text-align: center; padding: 45px 20px; color: var(--text-dim);">
-            <i class="fa-solid fa-box-open" style="font-size: 40px; margin-bottom: 12px; opacity: 0.5;"></i>
-            <p>No stored files found. Drag & drop or upload files above.</p>
-          </div>
-        `;
+      if (!files.length) {
+        grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1; text-align:center; padding:30px;">কোনো ফাইল নেই। ওপরে ফাইল আপলোড করুন।</p>';
         return;
       }
 
-      files.forEach((file) => {
-        const fileStyle = resolveFileIcon(file.name);
+      files.forEach((f, idx) => {
         const card = document.createElement('div');
         card.className = 'file-card';
         card.innerHTML = `
-          <div class="file-thumb-container" onclick="openPreview('${file.id}')">
-            <i class="fa-solid ${fileStyle.icon} file-icon-glow" style="color: ${fileStyle.color};"></i>
+          <div class="file-thumb" onclick="openPreview(${idx})"><i class="fa-solid ${getFileIcon(f.name)}"></i></div>
+          <div class="file-name" title="${f.name}">${f.name}</div>
+          <div class="file-info">
+            <span>${f.size}</span>
+            <span>${f.date}</span>
           </div>
-          <div class="file-name" title="${file.name}" onclick="openPreview('${file.id}')">${file.name}</div>
-          <div class="file-meta-row">
-            <span>${file.size}</span>
-            <span>${file.date}</span>
-          </div>
-          <div class="file-actions">
-            <button class="btn-card-preview" onclick="openPreview('${file.id}')">
-              <i class="fa-solid fa-eye"></i> View
-            </button>
-            <button class="btn-card-dl" onclick="directDownload('${file.streamUrl}', '${file.name}')" title="Direct Download">
-              <i class="fa-solid fa-download"></i>
-            </button>
+          <div class="card-actions">
+            <button class="btn-action" onclick="openPreview(${idx})"><i class="fa-solid fa-eye"></i> View</button>
+            <button class="btn-action" onclick="downloadInPage('${f.fileId}', '${f.name}')" title="Download"><i class="fa-solid fa-download"></i></button>
           </div>
         `;
         grid.appendChild(card);
       });
     }
 
-    /* ==========================================================
-       6. Pure In-Site Preview & Direct Download (No External Links)
-       ========================================================== */
-    async function openPreview(fileId) {
-      const file = loadSavedFiles().find(f => f.id === fileId);
+    // Direct in-page download (User never leaves page)
+    function downloadInPage(fileId, fileName) {
+      const downloadUrl = `/api/stream?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`;
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = downloadUrl;
+      document.body.appendChild(iframe);
+      setTimeout(() => { document.body.removeChild(iframe); }, 15000);
+    }
+
+    async function openPreview(index) {
+      const file = getFiles()[index];
       if (!file) return;
 
+      document.getElementById('modalFileName').innerText = file.name;
+      document.getElementById('modalDownloadBtn').onclick = () => downloadInPage(file.fileId, file.name);
+
       const ext = file.name.split('.').pop().toLowerCase();
-      const modal = document.getElementById('fileModal');
-      const container = document.getElementById('modalPreviewContent');
-      const title = document.getElementById('modalFileName');
-      const dlBtn = document.getElementById('modalDownloadBtn');
+      const body = document.getElementById('modalPreviewBody');
+      body.innerHTML = '<div style="color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> ফাইল লোড হচ্ছে...</div>';
+      document.getElementById('previewModal').style.display = 'flex';
 
-      title.innerText = file.name;
-      dlBtn.onclick = () => directDownload(file.streamUrl, file.name);
-      container.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="font-size:32px; color:var(--cyan-neon);"></i>`;
+      const fileUrl = `/api/stream?fileId=${file.fileId}&fileName=${encodeURIComponent(file.name)}`;
 
-      modal.style.display = 'flex';
-
-      // Images
-      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
-        container.innerHTML = `<img src="${file.streamUrl}" class="preview-media" alt="${file.name}" onerror="renderFallback('${file.name}')" />`;
-      }
-      // Videos
-      else if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
-        container.innerHTML = `<video controls autoplay class="preview-media" src="${file.streamUrl}"></video>`;
-      }
-      // Audio
-      else if (['mp3', 'wav', 'ogg', 'flac', 'aac'].includes(ext)) {
-        container.innerHTML = `
-          <div style="text-align:center; width:100%; max-width:450px;">
-            <i class="fa-solid fa-file-audio" style="font-size:55px; color:#fb7185; margin-bottom:16px;"></i>
-            <audio controls autoplay style="width: 100%;" src="${file.streamUrl}"></audio>
-          </div>
-        `;
-      }
-      // PDFs
-      else if (ext === 'pdf') {
-        container.innerHTML = `<iframe src="${file.streamUrl}" style="width:100%; height:58vh; border:none; border-radius:10px;"></iframe>`;
-      }
-      // Text and Code files
-      else if (['txt', 'js', 'html', 'css', 'json', 'py', 'ts', 'md', 'csv'].includes(ext)) {
-        try {
-          const res = await fetch(file.streamUrl);
-          const txt = await res.text();
-          container.innerHTML = `<pre class="preview-text-box">${escapeHtml(txt.slice(0, 50000))}</pre>`;
-        } catch {
-          renderFallback(file.name);
+      try {
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+          body.innerHTML = `<img src="${fileUrl}" class="preview-media" alt="${file.name}" />`;
+        } else if (['mp4', 'webm'].includes(ext)) {
+          body.innerHTML = `<video controls autoplay class="preview-media" src="${fileUrl}"></video>`;
+        } else if (['mp3', 'wav'].includes(ext)) {
+          body.innerHTML = `<audio controls autoplay style="width: 100%;" src="${fileUrl}"></audio>`;
+        } else if (ext === 'pdf') {
+          body.innerHTML = `<iframe src="${fileUrl}" style="width:100%; height:55vh; border:none; border-radius:8px;"></iframe>`;
+        } else if (['txt', 'js', 'json', 'html', 'css', 'py'].includes(ext)) {
+          const res = await fetch(fileUrl);
+          const text = await res.text();
+          body.innerHTML = `<pre class="text-preview-box">${escapeHtml(text)}</pre>`;
+        } else {
+          fallbackPreview(file.name);
         }
-      }
-      // Other archives / binary files
-      else {
-        renderFallback(file.name);
+      } catch (e) {
+        fallbackPreview(file.name);
       }
     }
 
-    function renderFallback(fileName) {
-      const fileStyle = resolveFileIcon(fileName);
-      const container = document.getElementById('modalPreviewContent');
-      container.innerHTML = `
-        <div style="text-align: center; padding: 20px;">
-          <i class="fa-solid ${fileStyle.icon}" style="font-size: 55px; color: ${fileStyle.color}; margin-bottom: 14px;"></i>
-          <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 4px;">Direct preview unavailable for this format.</p>
-          <p style="color: var(--text-muted); font-size: 11px;">Click below to download and open on your device.</p>
+    function escapeHtml(text) {
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function fallbackPreview(fileName) {
+      const body = document.getElementById('modalPreviewBody');
+      body.innerHTML = `
+        <div style="text-align: center; padding: 25px;">
+          <i class="fa-solid ${getFileIcon(fileName)}" style="font-size: 55px; color: var(--accent); margin-bottom: 12px;"></i>
+          <p style="color: var(--text-muted); font-size: 13px;">ফাইলটির ইন-সাইট প্রিভিউ সরাসরি দেখার মতো নয়। নিচের বাটনে চাপ দিয়ে ডাউনলোড করে নিন।</p>
         </div>
       `;
     }
 
-    function closeFileModal() {
-      const container = document.getElementById('modalPreviewContent');
-      container.innerHTML = ''; // Stop audio/video playing on modal close
-      document.getElementById('fileModal').style.display = 'none';
+    function closeModal() {
+      const body = document.getElementById('modalPreviewBody');
+      body.innerHTML = '';
+      document.getElementById('previewModal').style.display = 'none';
     }
 
-    /* Programmatic Direct Download (Never opens external webpage) */
-    function directDownload(url, filename) {
-      notifyUser(`Starting download: ${filename}`, 'info');
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-
-    function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
-    }
-
-    function purgeLocalHistory() {
-      if (confirm('Are you sure you want to clear your local file history?')) {
-        localStorage.removeItem('my_cloud_files_v3');
-        displaySavedFiles();
-        updateCapacityMeter([]);
-        notifyUser('Local file cache cleared', 'info');
+    function clearHistory() {
+      if (confirm('হিস্ট্রি মুছে ফেলতে চান?')) {
+        localStorage.removeItem('my_cloud_files');
+        renderFiles();
       }
     }
 
-    function notifyUser(message, type = 'success') {
-      const toast = document.getElementById('systemToast');
-      const toastMsg = document.getElementById('toastMessage');
-      const toastIcon = document.getElementById('toastIcon');
-
-      toastMsg.innerText = message;
-      if (type === 'error') {
-        toastIcon.className = 'fa-solid fa-circle-exclamation';
-        toastIcon.style.color = '#fb7185';
-      } else if (type === 'info') {
-        toastIcon.className = 'fa-solid fa-circle-info';
-        toastIcon.style.color = '#38bdf8';
-      } else {
-        toastIcon.className = 'fa-solid fa-circle-check';
-        toastIcon.style.color = '#34d399';
-      }
-
-      toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3000);
-    }
-
-    // Initial Load
-    const initialFiles = loadSavedFiles();
-    updateCapacityMeter(initialFiles);
-    displaySavedFiles();
+    renderFiles();
   </script>
 </body>
 </html>

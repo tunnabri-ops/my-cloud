@@ -4,7 +4,7 @@ const axios = require('axios');
 const app = express();
 app.use(express.json());
 
-const GOFILE_TOKEN = process.env.GOFILE_TOKEN;
+const GOFILE_TOKEN = (process.env.GOFILE_TOKEN || '').trim();
 
 // 1. আপলোড সার্ভার পাওয়ার রুট
 app.get('/api/server', async (req, res) => {
@@ -18,25 +18,34 @@ app.get('/api/server', async (req, res) => {
 
     res.json({
       server: serverName,
-      token: (GOFILE_TOKEN || '').trim()
+      token: GOFILE_TOKEN
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch server.' });
   }
 });
 
-// 2. আপনার সাইট থেকে সরাসরি ডাউনলোড এবং ইন-সাইট প্রিভিউ করার রুট
+// 2. সরাসরি ডাউনলোড ও ইন-সাইট প্রিভিউ রুট (401 ফিক্সড)
 app.get('/api/download', async (req, res) => {
   const { fileId, fileName } = req.query;
   if (!fileId) return res.status(400).send('File ID required');
 
   try {
-    const headers = GOFILE_TOKEN ? { Authorization: `Bearer ${GOFILE_TOKEN.trim()}` } : {};
-    const contentRes = await axios.get(`https://api.gofile.io/contents/${fileId}`, { headers });
-    const content = contentRes.data?.data;
+    // হেডার কনফিগারেশন (টোকেন থাকলে টোকেন হেডার পাঠাবে)
+    const requestHeaders = {};
+    if (GOFILE_TOKEN) {
+      requestHeaders['Authorization'] = `Bearer ${GOFILE_TOKEN}`;
+    }
 
+    // Gofile contents API রিকোয়েস্ট
+    const contentRes = await axios.get(`https://api.gofile.io/contents/${fileId}`, {
+      headers: requestHeaders
+    });
+
+    const content = contentRes.data?.data;
     let directLink = content?.link || content?.directLink;
 
+    // ফোল্ডার আকারে থাকলে চিলড্রেন থেকে আসল ফাইলের লিংক নেওয়া
     if (!directLink && content?.children) {
       const childKeys = Object.keys(content.children);
       if (childKeys.length > 0) {
@@ -45,15 +54,20 @@ app.get('/api/download', async (req, res) => {
     }
 
     if (!directLink) {
-      return res.status(404).send('Direct link could not be generated');
+      return res.status(404).send('Direct link not found');
     }
 
-    // Gofile-এর লিংক থেকে ফাইল নিয়ে এসে আপনার সাইট দিয়ে সরাসরি ব্রাউজারে পুশ করা
+    // স্ট্রিমিং ডাউনলোড রিকোয়েস্ট
+    const streamHeaders = {};
+    if (GOFILE_TOKEN) {
+      streamHeaders['Cookie'] = `accountToken=${GOFILE_TOKEN}`;
+    }
+
     const fileStream = await axios({
       method: 'get',
       url: directLink,
       responseType: 'stream',
-      headers: GOFILE_TOKEN ? { Cookie: `accountToken=${GOFILE_TOKEN.trim()}` } : {}
+      headers: streamHeaders
     });
 
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileName || 'download')}"`);
@@ -61,7 +75,8 @@ app.get('/api/download', async (req, res) => {
 
     fileStream.data.pipe(res);
   } catch (err) {
-    res.status(500).send('Download failed: ' + (err.message || 'Server error'));
+    console.error('Download stream error:', err.response?.data || err.message);
+    res.status(500).send('Download failed: ' + (err.response?.data?.message || err.message));
   }
 });
 

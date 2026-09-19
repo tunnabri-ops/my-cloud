@@ -6,7 +6,6 @@ app.use(express.json());
 
 const GOFILE_TOKEN = process.env.GOFILE_TOKEN;
 
-// সার্ভার পাওয়ার রুট
 app.get('/api/server', async (req, res) => {
   try {
     const serverRes = await axios.get('https://api.gofile.io/servers');
@@ -25,21 +24,28 @@ app.get('/api/server', async (req, res) => {
   }
 });
 
-// কোনো বাহ্যিক পেজ ছাড়াই ফাইলের সরাসরি স্ট্রিম/ডাউনলোড লিংক পাওয়ার রুট
+// File link khojar accurate route
 app.get('/api/file-info', async (req, res) => {
   const { fileId } = req.query;
   if (!fileId) return res.status(400).json({ error: 'fileId is required' });
 
   try {
-    const response = await axios.get(`https://api.gofile.io/contents/${fileId}`, {
-      headers: GOFILE_TOKEN ? { Authorization: `Bearer ${GOFILE_TOKEN}` } : {}
-    });
+    const headers = GOFILE_TOKEN ? { Authorization: `Bearer ${GOFILE_TOKEN.trim()}` } : {};
+    const response = await axios.get(`https://api.gofile.io/contents/${fileId}`, { headers });
+    const content = response.data?.data;
 
-    const fileData = response.data?.data;
-    const directLink = fileData?.link || fileData?.directLink;
+    let directLink = content?.link || content?.directLink;
+
+    // Gofile-e content jodi folder hoy, tar children theke link extract kora
+    if (!directLink && content?.children) {
+      const childKeys = Object.keys(content.children);
+      if (childKeys.length > 0) {
+        directLink = content.children[childKeys[0]]?.link;
+      }
+    }
 
     if (!directLink) {
-      return res.status(404).json({ error: 'Direct link not ready or not found' });
+      return res.status(404).json({ error: 'Direct link not found' });
     }
 
     res.json({ directLink });

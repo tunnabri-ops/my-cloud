@@ -49,7 +49,6 @@
     }
     .search-box input { background: transparent; border: none; color: #fff; outline: none; width: 100%; font-size: 13px; }
 
-    /* 10 TB Capacity Bar */
     .storage-banner {
       background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px;
       padding: 16px 20px; margin-bottom: 25px; backdrop-filter: blur(12px);
@@ -58,7 +57,6 @@
     .storage-bar-bg { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.08); border-radius: 10px; overflow: hidden; }
     .storage-bar-fill { width: 0.1%; height: 100%; background: linear-gradient(90deg, #38bdf8, #a855f7); border-radius: 10px; transition: width 0.3s; }
 
-    /* Upload Area */
     .upload-zone {
       background: var(--card-bg); backdrop-filter: blur(16px); border-radius: 20px;
       border: 2px dashed var(--card-border); padding: 35px 25px; text-align: center;
@@ -106,7 +104,6 @@
     }
     .btn-action:hover { background: #0369a1; }
 
-    /* Modal for Preview */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(10px);
       display: none; align-items: center; justify-content: center; z-index: 100; padding: 15px;
@@ -157,7 +154,6 @@
       </div>
     </div>
 
-    <!-- 10 TB Capacity Bar -->
     <div class="storage-banner">
       <div class="storage-header">
         <span><i class="fa-solid fa-hard-drive" style="color: var(--accent);"></i> Lifetime Cloud Space: 10 TB Free</span>
@@ -168,7 +164,6 @@
       </div>
     </div>
 
-    <!-- Upload Zone -->
     <div class="upload-zone">
       <input type="file" id="fileInput" onchange="handleFileUpload(this.files[0])" />
       <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
@@ -184,8 +179,8 @@
     </div>
 
     <div class="notice-bar">
-      <span><i class="fa-solid fa-shield-halved"></i> <strong>লাইফটাইম রাখার নিয়ম:</strong> ফাইল আজীবন অক্ষত রাখতে প্রতি ৩০ দিনে অন্তত একবার সাইট থেকে ফাইলটি ওপেন বা ডাউনলোড করুন।</span>
-      <button onclick="clearHistory()"><i class="fa-solid fa-trash"></i> হিস্ট্রি মুছুন</button>
+      <span><i class="fa-solid fa-shield-halved"></i> <strong>Lifetime Storage:</strong> File active rakhte 30 dine ontoto ekbar site theke open ba download korun.</span>
+      <button onclick="clearHistory()"><i class="fa-solid fa-trash"></i> Clear History</button>
     </div>
 
     <div class="section-title">
@@ -197,7 +192,6 @@
 
   </div>
 
-  <!-- In-Site Preview Modal -->
   <div class="modal-overlay" id="previewModal" onclick="if(event.target.id==='previewModal') closeModal()">
     <div class="modal-box">
       <div class="modal-header">
@@ -216,7 +210,6 @@
   </div>
 
   <script>
-    // Particle Canvas Animation
     const canvas = document.getElementById('particleCanvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
@@ -258,7 +251,6 @@
     function getFiles() { return JSON.parse(localStorage.getItem('my_cloud_files') || '[]'); }
     function saveFiles(files) { localStorage.setItem('my_cloud_files', JSON.stringify(files)); }
 
-    // Upload directly to provider
     async function handleFileUpload(file) {
       if (!file) return;
 
@@ -295,24 +287,19 @@
           if (xhr.status === 200) {
             const res = JSON.parse(xhr.responseText);
             if (res.status === 'ok') {
-              pText.innerHTML = '<span style="color:#4ade80;">Processing file...</span>';
+              pText.innerHTML = '<span style="color:#4ade80;">Upload Complete!</span>';
+              setTimeout(() => { pBox.style.display = 'none'; }, 2000);
 
               const d = res.data;
               let directDownloadLink = '';
 
-              // Fetch the direct downloadable stream link
               try {
                 const infoRes = await fetch(`/api/file-info?fileId=${d.fileId}`);
                 const infoData = await infoRes.json();
                 if (infoData.directLink) {
                   directDownloadLink = infoData.directLink;
                 }
-              } catch (e) {
-                console.warn('Could not fetch direct link immediately', e);
-              }
-
-              pText.innerHTML = '<span style="color:#4ade80;">Upload Complete!</span>';
-              setTimeout(() => { pBox.style.display = 'none'; }, 2000);
+              } catch (e) {}
 
               const files = getFiles();
               files.unshift({
@@ -373,7 +360,7 @@
 
       grid.innerHTML = '';
       if (!files.length) {
-        grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1; text-align:center; padding:30px;">কোনো ফাইল নেই। ওপরে ফাইল আপলোড করুন।</p>';
+        grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1; text-align:center; padding:30px;">No files found. Upload a file above.</p>';
         return;
       }
 
@@ -396,7 +383,6 @@
       });
     }
 
-    // Direct in-site file downloader (Zero redirects to provider)
     async function downloadInSite(fileId, fileName) {
       let directUrl = '';
       const files = getFiles();
@@ -418,19 +404,15 @@
         } catch (e) {}
       }
 
-      if (!directUrl) {
-        alert('ফাইল ডাউনলোড লিংক সংগ্রহ করা যায়নি। আবার চেষ্টা করুন।');
-        return;
+      if (directUrl) {
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = directUrl;
+        document.body.appendChild(iframe);
+        setTimeout(() => { document.body.removeChild(iframe); }, 15000);
+      } else {
+        window.location.href = `https://gofile.io/d/${fileId}`;
       }
-
-      // Trigger seamless download without opening tabs
-      const link = document.createElement('a');
-      link.href = directUrl;
-      link.setAttribute('download', fileName);
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     }
 
     async function openPreview(index) {
@@ -442,7 +424,7 @@
 
       const ext = file.name.split('.').pop().toLowerCase();
       const body = document.getElementById('modalPreviewBody');
-      body.innerHTML = '<div style="color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> ফাইল লোড হচ্ছে...</div>';
+      body.innerHTML = '<div style="color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading file...</div>';
       document.getElementById('previewModal').style.display = 'flex';
 
       let directUrl = file.directLink;
@@ -495,7 +477,7 @@
       body.innerHTML = `
         <div style="text-align: center; padding: 25px;">
           <i class="fa-solid ${getFileIcon(fileName)}" style="font-size: 55px; color: var(--accent); margin-bottom: 12px;"></i>
-          <p style="color: var(--text-muted); font-size: 13px;">ফাইলটির ইন-সাইট প্রিভিউ সরাসরি দেখার মতো নয়। নিচের বাটনে চাপ দিয়ে ডাউনলোড করে নিন।</p>
+          <p style="color: var(--text-muted); font-size: 13px;">Direct preview not supported for this file type. Click download below.</p>
         </div>
       `;
     }
@@ -507,7 +489,7 @@
     }
 
     function clearHistory() {
-      if (confirm('হিস্ট্রি মুছে ফেলতে চান?')) {
+      if (confirm('Clear local history?')) {
         localStorage.removeItem('my_cloud_files');
         renderFiles();
       }

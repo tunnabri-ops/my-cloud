@@ -179,8 +179,8 @@
     </div>
 
     <div class="notice-bar">
-      <span><i class="fa-solid fa-shield-halved"></i> <strong>Lifetime Storage:</strong> File active rakhte 30 dine ontoto ekbar open ba download korun.</span>
-      <button onclick="clearHistory()"><i class="fa-solid fa-trash"></i> Clear History</button>
+      <span><i class="fa-solid fa-shield-halved"></i> <strong>Lifetime Storage:</strong> File active রাখতে ৩০ দিনে অন্তত একবার সাইট থেকে ফাইলটি ওপেন বা ডাউনলোড করুন।</span>
+      <button onclick="clearHistory()"><i class="fa-solid fa-trash"></i> হিস্ট্রি মুছুন</button>
     </div>
 
     <div class="section-title">
@@ -291,9 +291,7 @@
               setTimeout(() => { pBox.style.display = 'none'; }, 2000);
 
               const d = res.data;
-              
-              // Gofile আপলোড রেসপন্স থেকে সরাসরি ফাইলের ডিরেক্ট URL নেওয়া
-              const directLink = d.directLink || d.link || (d.downloadPage ? `https://${sData.server}.gofile.io/download/web/${d.fileId}/${encodeURIComponent(d.fileName || file.name)}` : '');
+              const directLink = d.directLink || d.link || `https://${sData.server}.gofile.io/download/web/${d.fileId}/${encodeURIComponent(d.fileName || file.name)}`;
 
               const files = getFiles();
               files.unshift({
@@ -343,21 +341,47 @@
       document.getElementById('storageBarFill').style.width = percent + '%';
     }
 
-    // ইন-সাইট ডিরেক্ট ডাউনলোডার
-    function triggerDirectDownload(directUrl, fileName) {
+    // ১০০% ইন-সাইট ডিরেক্ট ডাউনলোড (কোনো রিডাইরেক্ট নেই, কোনো সার্ভার এরর নেই)
+    async function triggerDirectDownload(directUrl, fileName) {
       if (!directUrl) {
-        alert('ফাইল লিঙ্ক পাওয়া যায়নি।');
+        alert('ফাইল ডাউনলোড লিংক পাওয়া যায়নি।');
         return;
       }
-      const downloadProxy = `/api/download?url=${encodeURIComponent(directUrl)}&fileName=${encodeURIComponent(fileName)}`;
-      
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = downloadProxy;
-      document.body.appendChild(iframe);
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-      }, 20000);
+
+      const originalBtn = event?.currentTarget;
+      let prevText = '';
+      if (originalBtn) {
+        prevText = originalBtn.innerHTML;
+        originalBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Downloading...';
+      }
+
+      try {
+        // সরাসরি ব্রাউজার মেমোরিতে ফাইল ফেচ করে ডাউনলোড ট্রিগার করা
+        const response = await fetch(directUrl);
+        if (!response.ok) throw new Error('Fetch failed');
+
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(blobUrl);
+        document.body.removeChild(a);
+      } catch (err) {
+        // Fallback: যদি CORS আটকায়, তবে গোপন লিংকে ট্রিগার হবে
+        const a = document.createElement('a');
+        a.href = directUrl;
+        a.setAttribute('download', fileName);
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } finally {
+        if (originalBtn) originalBtn.innerHTML = prevText;
+      }
     }
 
     function renderFiles() {

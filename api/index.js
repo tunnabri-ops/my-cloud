@@ -6,13 +6,14 @@ app.use(express.json());
 
 const GOFILE_TOKEN = process.env.GOFILE_TOKEN;
 
+// 1. আপলোড সার্ভার পাওয়ার রুট
 app.get('/api/server', async (req, res) => {
   try {
     const serverRes = await axios.get('https://api.gofile.io/servers');
     const serverName = serverRes.data?.data?.servers?.[0]?.name;
 
     if (!serverName) {
-      return res.status(500).json({ error: 'Server not available.' });
+      return res.status(500).json({ error: 'Server unavailable.' });
     }
 
     res.json({
@@ -24,19 +25,18 @@ app.get('/api/server', async (req, res) => {
   }
 });
 
-// File link khojar accurate route
-app.get('/api/file-info', async (req, res) => {
-  const { fileId } = req.query;
-  if (!fileId) return res.status(400).json({ error: 'fileId is required' });
+// 2. আপনার সাইট থেকে সরাসরি ডাউনলোড এবং ইন-সাইট প্রিভিউ করার রুট
+app.get('/api/download', async (req, res) => {
+  const { fileId, fileName } = req.query;
+  if (!fileId) return res.status(400).send('File ID required');
 
   try {
     const headers = GOFILE_TOKEN ? { Authorization: `Bearer ${GOFILE_TOKEN.trim()}` } : {};
-    const response = await axios.get(`https://api.gofile.io/contents/${fileId}`, { headers });
-    const content = response.data?.data;
+    const contentRes = await axios.get(`https://api.gofile.io/contents/${fileId}`, { headers });
+    const content = contentRes.data?.data;
 
     let directLink = content?.link || content?.directLink;
 
-    // Gofile-e content jodi folder hoy, tar children theke link extract kora
     if (!directLink && content?.children) {
       const childKeys = Object.keys(content.children);
       if (childKeys.length > 0) {
@@ -45,12 +45,23 @@ app.get('/api/file-info', async (req, res) => {
     }
 
     if (!directLink) {
-      return res.status(404).json({ error: 'Direct link not found' });
+      return res.status(404).send('Direct link could not be generated');
     }
 
-    res.json({ directLink });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to retrieve file details' });
+    // Gofile-এর লিংক থেকে ফাইল নিয়ে এসে আপনার সাইট দিয়ে সরাসরি ব্রাউজারে পুশ করা
+    const fileStream = await axios({
+      method: 'get',
+      url: directLink,
+      responseType: 'stream',
+      headers: GOFILE_TOKEN ? { Cookie: `accountToken=${GOFILE_TOKEN.trim()}` } : {}
+    });
+
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileName || 'download')}"`);
+    res.setHeader('Content-Type', fileStream.headers['content-type'] || 'application/octet-stream');
+
+    fileStream.data.pipe(res);
+  } catch (err) {
+    res.status(500).send('Download failed: ' + (err.message || 'Server error'));
   }
 });
 
